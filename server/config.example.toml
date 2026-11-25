@@ -76,6 +76,22 @@ LOCALITY = 2000
 PARK = 1000
 MOUNTAIN = 1000
 
+# ---------------------------------------------------------------- networks
+# A network is any line layer whose features carry a name. trace_segment uses
+# it to draw "along X between A and B". Roads, rivers, channels, pipelines.
+
+[[networks]]
+name = "roads"
+url = "https://services-ap1.arcgis.com/P744lA0wf4LlBZ84/arcgis/rest/services/Vicmap_Transport/FeatureServer/1"
+auth = "none"
+name_field = "ezi_road_name"
+description = "Vicmap Transport road network. Victoria only. Names are upper case with the road type: 'CALDER FREEWAY'."
+version = "Vicmap Transport (live)"
+# An anchor further than this from every matching road means the name or the anchor is wrong.
+max_snap_m = 10000
+# Loose ends closer than this are joined: a road's name often lapses at an interchange or through a town.
+gap_tolerance_m = 250
+
 # ---------------------------------------------------------------- boundaries
 
 [[boundaries]]

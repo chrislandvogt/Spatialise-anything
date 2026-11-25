@@ -128,12 +128,30 @@ class Boundary:
 
 
 @dataclass(frozen=True)
+class Network:
+    """A polyline layer whose features carry a name: roads, rivers, pipelines."""
+    name: str
+    url: str
+    name_field: str
+    alt_name_fields: tuple[str, ...] = ()
+    where: str = ""
+    auth: ResourceAuth = "user"
+    description: str = ""
+    version: str = ""
+    # An anchor further than this from every matched line means the name or the anchor is wrong.
+    max_snap_m: float = 10_000.0
+    # Loose ends closer than this are treated as joined (a name often lapses through a town).
+    gap_tolerance_m: float = 250.0
+
+
+@dataclass(frozen=True)
 class Config:
     portal: Portal = field(default_factory=Portal)
     policy: Policy = field(default_factory=Policy)
     locators: tuple[Locator, ...] = ()
     gazetteers: tuple[Gazetteer, ...] = ()
     boundaries: tuple[Boundary, ...] = ()
+    networks: tuple[Network, ...] = ()
     auth_mode: AuthMode = "none"
     public_url: str = "http://127.0.0.1:8000"
     secret: str = ""
@@ -186,6 +204,19 @@ class Config:
                 return b
         raise ConfigError(f"no boundary set named {name!r}. Configured: {[b.name for b in self.boundaries] or 'none'}.")
 
+    def network(self, name: str | None) -> Network:
+        if not self.networks:
+            raise ConfigError("no line network is configured on this server, so 'along X between A and B' cannot "
+                              "be traced. Leave the mention unresolved with the needs_network flag.")
+        if not name:
+            if len(self.networks) == 1:
+                return self.networks[0]
+            raise ConfigError(f"say which network to trace: {[n.name for n in self.networks]}")
+        for n in self.networks:
+            if n.name.lower() == name.lower():
+                return n
+        raise ConfigError(f"no network named {name!r}. Configured: {[n.name for n in self.networks]}.")
+
 
 # ---------------------------------------------------------------- loading
 
@@ -214,7 +245,7 @@ def _known(table: dict, allowed: set[str], what: str) -> None:
 
 def from_dict(data: dict[str, Any], env: dict[str, str] | None = None) -> Config:
     env = dict(os.environ if env is None else env)
-    _known(data, {"server", "portal", "policy", "locators", "gazetteers", "boundaries"}, "config")
+    _known(data, {"server", "portal", "policy", "locators", "gazetteers", "boundaries", "networks"}, "config")
     server = dict(data.get("server", {}))
     _known(server, {"auth_mode", "public_url", "store_path", "allow_insecure_http"}, "[server]")
     allow_insecure = bool(server.get("allow_insecure_http", False))
@@ -324,6 +355,21 @@ def from_dict(data: dict[str, Any], env: dict[str, str] | None = None) -> Config
             generalised_url=gen, extra_fields=_tuple(t.get("extra_fields")), auth=resource_auth(t, what, url),
             description=str(t.get("description", "")), version=str(t.get("version", ""))))
 
+    networks = []
+    for t in data.get("networks", []):
+        _known(t, set(Network.__dataclass_fields__), "[[networks]]")
+        what = f"[[networks]] {t.get('name', '?')}"
+        url = str(t.get("url", "")).rstrip("/")
+        _check_url(url, what, allow_insecure)
+        if not t.get("name_field"):
+            raise ConfigError(f"{what}: name_field is required")
+        networks.append(Network(
+            name=unique(str(t.get("name", "")), what), url=url, name_field=str(t["name_field"]),
+            alt_name_fields=_tuple(t.get("alt_name_fields")), where=str(t.get("where", "")),
+            auth=resource_auth(t, what, url), description=str(t.get("description", "")),
+            version=str(t.get("version", "")), max_snap_m=float(t.get("max_snap_m", 10_000.0)),
+            gap_tolerance_m=float(t.get("gap_tolerance_m", 250.0))))
+
     static_token = env.get("ARCGIS_TOKEN", "")
     auth_mode = server.get("auth_mode") or ("oauth" if portal.client_id else "static" if static_token else "none")
     if auth_mode not in ("oauth", "static", "none"):
@@ -340,7 +386,7 @@ def from_dict(data: dict[str, Any], env: dict[str, str] | None = None) -> Config
     if auth_mode == "static" and not static_token:
         raise ConfigError("auth_mode = static needs ARCGIS_TOKEN in the environment")
     return Config(portal=portal, policy=policy, locators=tuple(locators), gazetteers=tuple(gazetteers),
-                  boundaries=tuple(boundaries), auth_mode=auth_mode, public_url=public_url, secret=secret,
+                  boundaries=tuple(boundaries), networks=tuple(networks), auth_mode=auth_mode, public_url=public_url, secret=secret,
                   store_path=str(env.get("SPATIALISE_STORE_PATH") or server.get("store_path") or ""),
                   static_token=static_token, allow_insecure_http=allow_insecure)
 

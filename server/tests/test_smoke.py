@@ -10,7 +10,8 @@ async def test_tools_are_listed_with_schemas_and_annotations(make_app):
     async with Client(make_app().mcp) as client:
         tools = {t.name: t for t in (await client.list_tools()).tools}
     assert set(tools) == {"list_resolvers", "geocode", "reverse_geocode", "search_gazetteer", "lookup_boundary",
-                          "publish_features"}
+                          "trace_segment", "publish_features"}
+    assert tools["trace_segment"].annotations.read_only_hint is True
     assert tools["list_resolvers"].annotations.read_only_hint is True
     assert tools["publish_features"].annotations.read_only_hint is False
     assert tools["geocode"].annotations.read_only_hint is False  # it can spend credits and sends text out

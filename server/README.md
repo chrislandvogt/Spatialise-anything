@@ -2,7 +2,7 @@
 
 The network half of [Spatialise Anything](../README.md). The skill decides;
 this server resolves. It wraps ArcGIS REST - locators, feature services and
-hosted feature layers - behind six tools, and it makes no decisions: every
+hosted feature layers - behind seven tools, and it makes no decisions: every
 tool returns candidates and metadata, and the skill picks.
 
 | Tool | Does | ArcGIS REST operation |
@@ -12,14 +12,19 @@ tool returns candidates and metadata, and the skill picks.
 | `reverse_geocode` | Point to nearest address or place | `reverseGeocode` |
 | `search_gazetteer` | Place name to candidates with feature type and geometry | feature layer `query` |
 | `lookup_boundary` | Code or name to a polygon: LGA, SA2, postcode, your own zones | feature layer `query` |
+| `trace_segment` | Two anchors and a named road, river or asset to the line between them | line layer `query`, then a shortest path over the segments |
 | `publish_features` | Contract features to a new or existing hosted feature layer | `createService`, `addToDefinition`, `addFeatures` |
 
-`trace_segment` - "along the Calder between Kyneton and Castlemaine" as a
-line - is the next phase.
+`trace_segment` is what turns "along the Calder between Kyneton and
+Castlemaine" into a line. It needs no network-analysis service: any line
+layer with a name field works, so it traces a customer's own channels and
+pipelines as readily as roads. It reports what it assumed - how far each
+anchor was from the line, any gaps it bridged, which names it ran along - and
+returns no line at all rather than a straight one when the pieces do not join.
 
-> **Status.** Built and tested against an in-process ArcGIS stand-in (108
+> **Status.** Built and tested against an in-process ArcGIS stand-in (126
 > tests) and, read-only, against live public services (ABS boundaries, the
-> VICNAMES register, the World Geocoding Service). **Not yet run against a
+> VICNAMES register, the Vicmap road network, the World Geocoding Service). **Not yet run against a
 > real ArcGIS organisation**: sign-in, a customer locator and publishing all
 > need an OAuth app and an account. [Verifying against your organisation](#verifying-against-your-organisation)
 > is a ten-minute job with the script provided.
@@ -61,8 +66,8 @@ Connect Claude Code to it:
 claude mcp add --transport http spatialise http://127.0.0.1:8000/mcp
 ```
 
-Then ask Claude for the SA2 called Kyneton, or what "Lake Eppalock" is in the
-VICNAMES register.
+Then ask Claude for the SA2 called Kyneton, what "Lake Eppalock" is in the
+VICNAMES register, or the Calder between Kyneton and Castlemaine.
 
 ## Sign-in: registering the OAuth app
 
@@ -196,6 +201,11 @@ name = "depot-zones"
 url = "https://gis.agency.gov.au/server/rest/services/Ops/Zones/FeatureServer/0"
 code_field = "ZONE_NO"
 name_field = "ZONE_NAME"
+
+[[networks]]                  # any line layer with a name: roads, rivers, channels, pipelines
+name = "channels"
+url = "https://gis.agency.gov.au/server/rest/services/Assets/Channels/FeatureServer/0"
+name_field = "CHANNEL_NAME"
 ```
 
 The config is checked at start-up and fails with a reason: an unknown
@@ -259,7 +269,7 @@ missing from `trusted_hosts` (reported plainly, with the fix).
 
 ```bash
 pip install -e "server[dev]"
-python -m pytest server/tests                       # 108 tests, no network
+python -m pytest server/tests                       # 126 tests, no network
 SPATIALISE_LIVE=1 python -m pytest server/tests/test_live.py   # read-only, real public services
 ```
 
@@ -271,7 +281,10 @@ copies drift.
 
 ## Limitations
 
-- No `trace_segment` yet, so "along the X between A and B" stays unresolved.
+- `trace_segment` joins segments by shared end points and by name. It does
+  not know one-way streets or turn restrictions, and where a road's name
+  lapses for more than `gap_tolerance_m` it reports `no_path` rather than
+  guess. On a dual carriageway it follows one side.
 - Geometry passes through the conversation. Boundaries default to 300
   vertices; full-resolution polygons are available but costly.
 - Published layers are EPSG:4326, with each feature's `source_crs` recorded.

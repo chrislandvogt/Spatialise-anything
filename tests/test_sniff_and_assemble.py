@@ -148,3 +148,21 @@ def test_a_decision_that_cannot_be_expanded_stops_the_run(tmp_path, capsys):
     assert code == 1 and feats is None and report["valid"] is False
     assert "decision[1] ('trimmed')" in report["errors"][0] and "as the tool returned it" in report["errors"][0]
     assert "decision[2]" in report["errors"][1]
+
+
+def test_traced_line_keeps_its_shape_and_the_flag_the_connector_named(tmp_path):
+    traced = {"label": "WESTERN FREEWAY", "kind": "roads", "method": "trace_segment",
+              "resolver": {"name": "roads", "version": "Vicmap Transport (live)"}, "point": [143.9, -37.55],
+              "geometry": {"type": "LineString", "coordinates": [[144.2, -37.6], [143.9, -37.55], [143.8, -37.55]]},
+              "uncertainty_m": 3200, "start_offset_m": 900, "end_offset_m": 3200,
+              "uncertainty_basis": "the line follows the mapped feature to within about 25 m; its ends are where the "
+                                   "anchors fall nearest the line (flag: anchor_approximate)"}
+    code, feats = run_assemble(tmp_path, [
+        {"mention": "along the Western between Ballan and Ballarat", "source": {"doc": "r.txt", "char_start": 0,
+                                                                                "char_end": 45},
+         "tier": "relative", "candidate": traced, "confidence": 0.8, "label": "Western Freeway, Ballan to Ballarat"}])
+    assert code == 0
+    p = feats[0]["properties"]
+    assert feats[0]["geometry"]["type"] == "LineString" and p["method"] == "trace_segment"
+    assert p["flags"] == ["anchor_approximate"] and p["uncertainty_m"] == 3200
+    assert p["label"] == "Western Freeway, Ballan to Ballarat" and p["tier"] == "relative"

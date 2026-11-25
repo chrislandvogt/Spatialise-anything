@@ -379,3 +379,86 @@ async def test_client_refuses_to_send_a_token_to_an_untrusted_host(make_app, fak
     with pytest.raises(SpatialiseError, match="needs a token"):        # asked without auth: none is attached
         await client.call(f"{PORTAL}/sharing/rest/portals/self", {}, auth=False)
     assert "token" not in fake.calls[-1]["form"]
+
+
+# ---------------------------------------------------------------- trace_segment
+
+A, B = [144.05, -36.99], [144.33, -37.02]      # two "towns", each about a kilometre or two off the road
+
+
+async def test_trace_follows_the_named_road_between_two_anchors(make_app, fake):
+    out = await call(make_app(), "trace_segment", {"name": "Main", "start": A, "end": B})
+    assert out["status"] == "ok" and out["network"] == "roads" and out["resolver"] == {"name": "roads", "version": "roads-1"}
+    assert out["matched_names"] == {"MAIN HIGHWAY": 14, "MAIN FREEWAY": 6}      # MAIN STREET is outside the corridor
+    (c,) = out["candidates"]
+    line = c["geometry"]["coordinates"]
+    assert c["geometry"]["type"] == "LineString" and c["method"] == "trace_segment" and c["kind"] == "roads"
+    assert abs(line[0][0] - 144.05) < 0.006 and abs(line[-1][0] - 144.33) < 0.001   # nearest point on a wiggly road
+    assert all(-37.0001 <= p[1] <= -36.9979 for p in line)                     # on the road, not a straight chord
+    xs = [p[0] for p in line]
+    assert xs == sorted(xs)
+    assert c["label"] == "MAIN HIGHWAY / MAIN FREEWAY" and list(c["names_m"]) == ["MAIN HIGHWAY", "MAIN FREEWAY"]
+    assert 26_800 < c["length_m"] < 27_800 and c["length_m"] > c["straight_line_m"]   # 24.4 km straight, plus the wiggles
+    assert 900 < c["start_offset_m"] < 1200 and 2100 < c["end_offset_m"] < 2300
+    assert c["uncertainty_m"] == c["end_offset_m"] and "anchor_approximate" in c["uncertainty_basis"]
+    assert c["gaps_m"] and 80 < c["gaps_m"][0] < 95 and "bridged" in c["gaps_note"]
+    assert c["point"] in line and c["vertices"] == len(line)
+
+
+async def test_trace_pages_through_a_layer_that_serves_eight_at_a_time(make_app, fake):
+    out = await call(make_app(), "trace_segment", {"name": "Main", "start": A, "end": B})
+    pages = calls_to(fake, "/query")
+    assert len(pages) == 3 and [p["form"]["resultOffset"] for p in pages] == ["0", "8", "16"]
+    assert out["segments"] == 20 and "incomplete" not in out
+    assert all(p["form"]["token"] for p in pages) and "LIKE 'MAIN%'" in pages[0]["form"]["where"]
+    assert pages[0]["form"]["geometryType"] == "esriGeometryEnvelope"
+
+
+async def test_trace_exact_name_stops_where_the_name_does(make_app):
+    out = await call(make_app(), "trace_segment", {"name": "Main Highway", "start": A, "end": B, "match": "exact"})
+    assert out["matched_names"] == {"MAIN HIGHWAY": 14} and out["status"] == "ok"
+    (c,) = out["candidates"]
+    assert c["label"] == "MAIN HIGHWAY" and c["geometry"]["coordinates"][-1][0] <= 144.2801
+    assert c["end_offset_m"] > 4000 and c["uncertainty_m"] == c["end_offset_m"]   # honest about the short end
+
+
+async def test_trace_refuses_rather_than_guesses(make_app, fake):
+    app = make_app()
+    none = await call(app, "trace_segment", {"name": "Calder", "start": A, "end": B})
+    assert none["status"] == "no_match" and none["candidates"] == [] and "stays unresolved" in none["hint"]
+    far = await call(app, "trace_segment", {"name": "Main", "start": A, "end": [144.33, -37.3], "corridor_km": 40})
+    assert far["status"] == "too_far" and far["candidates"] == [] and far["end_offset_m"] > 30_000
+    assert "probably not the\\n" not in far["hint"] and "MAIN" in far["hint"]
+    fake.services["gis.portal.test/Roads"]["layers"][0].features[9]["attributes"]["ROAD_NAME"] = "HIGH STREET"
+    split = await call(app, "trace_segment", {"name": "Main", "start": A, "end": B})
+    assert split["status"] == "no_path" and "do not draw a straight line" in split["hint"]
+    assert "do not join up" in split["hint"]
+
+
+async def test_trace_respects_the_vertex_budget_and_input_rules(make_app):
+    app = make_app()
+    small = await call(app, "trace_segment", {"name": "Main", "start": A, "end": B, "max_vertices": 20})
+    c = small["candidates"][0]
+    assert c["vertices"] <= 20 and c["uncertainty_m"] >= 25
+    assert "same place" in (await call(app, "trace_segment", {"name": "Main", "start": A, "end": A}))["_error"]
+    long = await call(app, "trace_segment", {"name": "Main", "start": [115.8, -31.9], "end": [153.0, -27.5]})
+    assert "shorter stretches" in long["_error"]
+    wrong = await call(app, "trace_segment", {"name": "Main", "start": A, "end": B, "network": "rail"})
+    assert "Configured: ['roads']" in wrong["_error"]
+    none = await call(make_app({"networks": []}), "trace_segment", {"name": "Main", "start": A, "end": B})
+    assert "needs_network" in none["_error"]
+    poly = make_app({"networks": [{"name": "bad", "url": f"{SERVICES}/Water/FeatureServer/0", "name_field": "NAME"}]})
+    assert "tracing needs lines" in (await call(poly, "trace_segment", {"name": "x", "start": A, "end": B}))["_error"]
+
+
+async def test_trace_says_when_a_layer_cannot_give_everything(make_app, fake):
+    fake.services["gis.portal.test/Roads"]["layers"][0].pagination = False
+    out = await call(make_app(), "trace_segment", {"name": "Main", "start": A, "end": B})
+    assert "incomplete" in out and out["segments"] == 8
+
+
+async def test_list_resolvers_includes_networks(make_app):
+    out = await call(make_app(), "list_resolvers", {"check": True})
+    assert out["networks"] == [{"name": "roads", "host": "gis.portal.test", "needs_sign_in": True,
+                                "version": "roads-1", "status": "ok"}]
+    assert "trace_segment" in (await call(make_app({"networks": []}), "list_resolvers"))["not_available"]

@@ -28,6 +28,7 @@ contract, many input adapters.
 | "Richmond" in an inner-Melbourne report | Richmond, VIC - with Richmond NSW, QLD, SA and TAS kept as rejected candidates and why |
 | "Richmond" on its own | `ambiguous`, null geometry, six candidates, and one question at the end |
 | "about 5 km south-east of Castlemaine", "within 2 km of Kyneton", "north of Bendigo" | A point with honest uncertainty, a buffer, a sector |
+| "along the Calder between Kyneton and Castlemaine" (with the connector) | A 29 km line on the freeway, with a note that it ends 6 km short of Castlemaine because the freeway bypasses it |
 
 Three rules hold throughout:
 
@@ -120,7 +121,7 @@ against PROJ to the nanometre.
 
 ### The connector
 
-[`server/`](server/README.md) is the MCP server: six tools over ArcGIS REST
+[`server/`](server/README.md) is the MCP server: seven tools over ArcGIS REST
 that return candidates and never decide.
 
 | Tool | Does |
@@ -129,12 +130,13 @@ that return candidates and never decide.
 | `geocode` / `reverse_geocode` | Address text to scored candidates; point to nearest address |
 | `search_gazetteer` | Place name to candidates with feature type - lakes, rivers, facilities |
 | `lookup_boundary` | Code or name to a polygon - SA2, LGA, your own zones |
+| `trace_segment` | Two anchors and a named road or river to the line between them |
 | `publish_features` | Contract features to a hosted feature layer, as the signed-in user |
 
 The operator's config decides which resolvers exist: the customer's own
 locator first, a public geocoder only if switched on. Users sign in with
 their own ArcGIS account, so portal permissions apply. It runs with no ArcGIS
-organisation at all against public ABS and VICNAMES services:
+organisation at all against public ABS, VICNAMES and Vicmap services:
 
 ```
 pip install -e "server[dev]"
@@ -185,7 +187,7 @@ regenerate the corpus with `tools/make_corpus.py`.
 | 1 Contract and corpus | Feature schema, hand-checkable corpus | Schema validates every expected output | Done (3 items await a human hand-check) |
 | 2 Skill v0, offline | Tier 0, offline postcodes, localities, LGAs, GeoJSON, preview | Meets the tier 0 bar in Claude with no connector | Scripts meet it; a recorded Claude run is next |
 | 3 MCP server | `list_resolvers`, `geocode`, `search_gazetteer`, `lookup_boundary`, `publish_features` on ArcGIS Online then Enterprise | Addresses and ambiguous names land in a hosted feature layer via a nominated locator | Built, plus `reverse_geocode` and OAuth sign-in. Exit test passes against the stand-in; **not yet run on a real organisation** (`server/scripts/live_smoke.py`) |
-| 4 Relative tier and plugin | `trace_segment`, constructed geometry, packaged plugin | "Along the Calder between Kyneton and Castlemaine" returns a line on the freeway; zip installs on claude.ai | Constructed geometry and packaging done; `trace_segment` not started |
+| 4 Relative tier and plugin | `trace_segment`, constructed geometry, packaged plugin | "Along the Calder between Kyneton and Castlemaine" returns a line on the freeway; zip installs on claude.ai | `trace_segment` built: the Calder line is returned from the live Vicmap road network. Zip install on claude.ai not yet tried |
 | 5 Customer-ready | Customer-locator-only config, evaluation report, demo script | End-to-end against an Enterprise with the public geocoder disabled | Customer-locator-only is the server's default; the rest not started |
 
 ## Limitations
@@ -193,7 +195,8 @@ regenerate the corpus with `tools/make_corpus.py`.
 - Offline coverage is Australian localities, postal areas and LGAs only.
   Street addresses, lakes, rivers, facilities and custom zones need the
   connector; without it they come back `unresolved` with `needs_network`.
-- "Along the X between A and B" needs `trace_segment`, which is not built.
+- "Along the X between A and B" needs the connector and a line network for
+  the area (the example config has Victoria's roads only).
 - The connector has not been run against a real ArcGIS organisation yet.
 - A conversational tool, not a bulk pipeline.
 - The confidence threshold (0.7) is provisional until set from a full

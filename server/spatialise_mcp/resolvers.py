@@ -16,12 +16,14 @@ from typing import Any, Awaitable, Callable
 
 import anyio
 
-from . import confirm, esri
+from . import confirm, esri, trace
 from .arcgis import ArcGIS
-from .config import Boundary, Config, Gazetteer, Locator, host_of
+from .config import Boundary, Config, Gazetteer, Locator, Network, host_of
 from .errors import ArcGISError, ConfigError, PolicyError, SignInRequired, SpatialiseError
 
 CONCURRENCY = 4
+MAX_TRACE_SEGMENTS = 5000
+MAX_TRACE_KM = 500
 INFO_TTL_S = 600
 _info_cache: dict[str, tuple[float, dict[str, Any]]] = {}
 
@@ -162,7 +164,13 @@ class Resolvers:
             **({"description": b.description} if b.description else {}),
             "_url": b.url, "_auth": b.auth == "user",
         } for b in cfg.boundaries]
-        entries = locators + gazetteers + boundaries
+        networks = [{
+            "name": n.name, "host": host_of(n.url), "needs_sign_in": n.auth == "user",
+            **({"version": n.version} if n.version else {}),
+            **({"description": n.description} if n.description else {}),
+            "_url": n.url, "_auth": n.auth == "user",
+        } for n in cfg.networks]
+        entries = locators + gazetteers + boundaries + networks
         if check:
             async def probe(e: dict[str, Any]) -> None:
                 if e.get("allowed") is False:
@@ -195,6 +203,7 @@ class Resolvers:
             "locators": locators,
             "gazetteers": gazetteers,
             "boundaries": boundaries,
+            "networks": networks,
             "publish": {
                 "enabled": publish_ok,
                 **({} if publish_ok else {"reason": "publishing is disabled by server policy" if not
@@ -203,7 +212,8 @@ class Resolvers:
             },
             "not_available": [t for t, missing in (
                 ("geocode / reverse_geocode", not any(e["allowed"] for e in locators)),
-                ("search_gazetteer", not gazetteers), ("lookup_boundary", not boundaries)) if missing],
+                ("search_gazetteer", not gazetteers), ("lookup_boundary", not boundaries),
+                ("trace_segment", not networks)) if missing],
         }
 
     # ------------------------------------------------------------ confirmation
@@ -679,4 +689,139 @@ class Resolvers:
         if any(r["count"] == 0 for r in results):
             out["no_match_hint"] = ("A query with no candidates stays unresolved - check the code or spelling, or "
                                     "that this boundary set is the right one (list_resolvers).")
+        return out
+
+    # ------------------------------------------------------------ trace_segment
+
+    async def _query_all(self, url: str, auth: bool, info: dict[str, Any], where: str, fields: list[str],
+                         bbox: list[float], cap: int) -> tuple[list[dict], bool]:
+        """Every feature matching, page by page. Returns (features, complete)."""
+        paged = bool((info.get("advancedQueryCapabilities") or {}).get("supportsPagination"))
+        page = int(info.get("maxRecordCount") or 1000)
+        feats: list[dict] = []
+        while True:
+            params: dict[str, Any] = {
+                "where": where, "outFields": ",".join(dict.fromkeys(fields)), "returnGeometry": True, "outSR": 4326,
+                "geometryPrecision": 6, "geometry": ",".join(str(v) for v in bbox),
+                "geometryType": "esriGeometryEnvelope", "inSR": 4326, "spatialRel": "esriSpatialRelIntersects"}
+            if paged:
+                params.update(resultOffset=len(feats), resultRecordCount=page, orderByFields=info.get("objectIdField")
+                              or "OBJECTID")
+            data = await self.arcgis.call(url + "/query", params, auth=auth)
+            got = data.get("features") or []
+            feats += got
+            more = bool(data.get("exceededTransferLimit"))
+            if len(feats) > cap:
+                raise SpatialiseError(f"more than {cap} segments match in this corridor. Give the full name of the "
+                                      "road or river (match='exact'), or trace a shorter stretch.")
+            if not more or not got:
+                return feats, True
+            if not paged:
+                return feats, False  # the layer cut the answer short and cannot page: say so
+
+    async def trace_segment(self, name: str, start: list[float], end: list[float], network: str | None = None,
+                            match: str = "prefix", max_vertices: int = 300,
+                            corridor_km: float | None = None) -> dict[str, Any]:
+        net: Network = self.cfg.network(network)
+        (name,) = _check_texts([name], "name", 1, 200)
+        start, end = _check_point(start, "start"), _check_point(end, "end")
+        if match not in ("exact", "prefix", "contains"):
+            raise SpatialiseError("match must be exact, prefix or contains")
+        max_vertices = max(20, min(int(max_vertices), 5000))
+        straight_km = esri.haversine_m(start[0], start[1], end[0], end[1]) / 1000
+        if straight_km < 0.05:
+            raise SpatialiseError("start and end are the same place: a stretch needs two different anchors")
+        if straight_km > MAX_TRACE_KM:
+            raise SpatialiseError(f"the anchors are {straight_km:.0f} km apart, over the limit of {MAX_TRACE_KM} km. "
+                                  "Trace it in shorter stretches.")
+        pad_km = max(1.0, min(float(corridor_km), 100.0)) if corridor_km else min(50.0, max(5.0, 0.25 * straight_km))
+        dy = pad_km / 110.574
+        dx = pad_km / (111.320 * max(0.2, math.cos(math.radians((start[1] + end[1]) / 2))))
+        bbox = [min(start[0], end[0]) - dx, min(start[1], end[1]) - dy, max(start[0], end[0]) + dx,
+                max(start[1], end[1]) + dy]
+
+        auth = net.auth == "user"
+        what = f"network {net.name!r}"
+        info, f = await self._layer(net.url, auth, what, [net.name_field, *net.alt_name_fields])
+        if info.get("geometryType") != "esriGeometryPolyline":
+            raise ConfigError(f"{what}: the layer holds {info.get('geometryType')}, and tracing needs lines")
+        upper = name.upper()
+        if match == "exact":
+            tests = [f"UPPER({f[x]}) = {esri.sql_text(upper)}" for x in (net.name_field, *net.alt_name_fields)]
+        else:
+            pat = esri.like_text(upper, prefix=match == "contains", suffix=True)
+            tests = [f"UPPER({f[x]}) LIKE {pat}" for x in (net.name_field, *net.alt_name_fields)]
+        where = "(" + " OR ".join(tests) + ")" + (f" AND ({net.where})" if net.where else "")
+        feats, complete = await self._query_all(net.url, auth, info, where, list(f.values()), bbox,
+                                                MAX_TRACE_SEGMENTS)
+        res = self._resolver(net.name, net.version, info)
+        lines: list[tuple[list[list[float]], str]] = []
+        matched: dict[str, int] = {}
+        for feat in feats:
+            geom = esri.to_geojson(feat.get("geometry"))
+            if geom is None:
+                continue
+            label = str((feat.get("attributes") or {}).get(f[net.name_field]) or "")
+            matched[label] = matched.get(label, 0) + 1
+            for part in ([geom["coordinates"]] if geom["type"] == "LineString" else geom["coordinates"]):
+                lines.append((part, label))
+        out: dict[str, Any] = {"network": net.name, "resolver": res, "name": name, "match": match,
+                               "segments": len(lines), "corridor_km": round(pad_km, 1),
+                               "matched_names": dict(sorted(matched.items(), key=lambda kv: -kv[1])[:25])}
+        if not complete:
+            out["incomplete"] = ("the layer returned only part of the matching segments and cannot page, so the "
+                                 "trace may be missing pieces")
+        t = trace.trace(lines, start, end, max_snap_m=net.max_snap_m, gap_tolerance_m=net.gap_tolerance_m,
+                        max_vertices=max_vertices)
+        out["status"] = t["status"]
+        out["candidates"] = []
+        if t["status"] == "no_match":
+            out["hint"] = (f"nothing named like {name!r} within {pad_km:.0f} km of the anchors. Check the name, try "
+                           "match='contains', or widen corridor_km. Otherwise the mention stays unresolved.")
+            return out
+        out.update(start_offset_m=t["start_offset_m"], end_offset_m=t["end_offset_m"])
+        if t["status"] == "too_far":
+            out["hint"] = (f"the nearest matching line is {max(t['start_offset_m'], t['end_offset_m']) / 1000:.1f} km "
+                           f"from an anchor (limit {net.max_snap_m / 1000:g} km), so this is probably not the "
+                           f"stretch the text means. Nearest names: {sorted(set(t['nearest_names']))}. Check the "
+                           "anchors and the name; otherwise the mention stays unresolved.")
+            return out
+        if t["status"] == "no_path":
+            out["hint"] = ("matching lines exist near both anchors but do not join up, even after bridging gaps of "
+                           f"{net.gap_tolerance_m:g} m. The name may change along the way (see matched_names): try a "
+                           "shorter or broader name with match='prefix' or 'contains'. Otherwise the mention "
+                           "stays unresolved - do not draw a straight line in its place.")
+            return out
+        coords = t["coords"]
+        worst_end = max(t["start_offset_m"], t["end_offset_m"])
+        across = max(25, t["simplified_m"])
+        basis = f"the line follows the mapped feature to within about {across} m"
+        if worst_end > across:
+            basis += (f"; its ends are where the anchors fall nearest the line, up to {worst_end} m from the anchors "
+                      "themselves, so where the stretch starts and stops is only that good (flag: anchor_approximate)")
+        names = list(t["names"])
+        cand: dict[str, Any] = {
+            "label": " / ".join(names[:3]) + (f" (+{len(names) - 3} more)" if len(names) > 3 else ""),
+            "kind": net.name,
+            "geometry": {"type": "LineString", "coordinates": coords},
+            "point": coords[len(coords) // 2],
+            "vertices": len(coords),
+            "length_m": t["length_m"],
+            "straight_line_m": t["straight_line_m"],
+            "names_m": t["names"],
+            "start_offset_m": t["start_offset_m"],
+            "end_offset_m": t["end_offset_m"],
+            "uncertainty_m": max(across, worst_end),
+            "uncertainty_basis": basis,
+            "method": "trace_segment",
+            "resolver": res,
+        }
+        if t["gaps_m"]:
+            cand["gaps_m"] = t["gaps_m"]
+            cand["gaps_note"] = (f"{len(t['gaps_m'])} gap(s) in the named line were bridged with a straight join, "
+                                 f"the longest {max(t['gaps_m'])} m")
+        if t["length_m"] > 3 * t["straight_line_m"] + 2000:
+            cand["detour_note"] = ("the traced line is more than three times the straight-line distance: check "
+                                   "that it is the stretch the text means")
+        out["candidates"] = [cand]
         return out

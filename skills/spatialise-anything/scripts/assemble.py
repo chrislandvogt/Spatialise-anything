@@ -164,9 +164,9 @@ def _connector_geometry(cand: dict, as_point: bool) -> tuple[dict, float, list[s
     for key in ("label", "resolver", "method"):
         if not cand.get(key):
             raise ValueError(f"connector candidate is missing {key!r}: pass the candidate as the tool returned it")
-    flags = []
-    if "default_uncertainty" in str(cand.get("uncertainty_basis", "")):
-        flags.append("default_uncertainty")
+    # The connector names any flag a candidate needs in its uncertainty_basis.
+    flags = [fl for fl in ("default_uncertainty", "anchor_approximate")
+             if fl in str(cand.get("uncertainty_basis", ""))]
     shape = cand.get("geometry")
     if shape and not as_point:
         return shape, float(cand.get("uncertainty_m") or 0.0), flags

@@ -54,7 +54,8 @@ Run them with `python3 scripts/<name>.py --help` for full options.
      and LGAs only. Lakes, roads, rivers, facilities and addresses need the
      connector: `geocode`, `search_gazetteer`, `lookup_boundary`.
    - relative: resolve the anchors first, then
-     `build_geometry.py offset|buffer|sector|line ...`
+     `build_geometry.py offset|buffer|sector|line ...`; for "along R
+     between X and Y" the connector's `trace_segment` (never a straight line)
 6. **Disambiguate.** Rank by the frame, by distance to mentions already
    resolved, and by feature type. Resolved neighbours pull ambiguous ones.
    Details and worked cases: `references/disambiguation.md`.
@@ -89,7 +90,7 @@ answer is still useful (an address's locality), you may emit that instead
 with flag `offline_only` and the locality's uncertainty - say so.
 
 With the Spatialise connector attached (tools `list_resolvers`, `geocode`,
-`search_gazetteer`, `lookup_boundary`, `reverse_geocode`,
+`search_gazetteer`, `lookup_boundary`, `trace_segment`, `reverse_geocode`,
 `publish_features`), read `references/connector.md` before the first call.
 In short: do the offline tiers first; call `list_resolvers` and use only what
 it allows (the customer's own locator before any other, a public geocoder

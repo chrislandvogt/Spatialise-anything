@@ -1,13 +1,12 @@
-"""The MCP server: six tools over ArcGIS REST, and the app that serves them.
+"""The MCP server: seven tools over ArcGIS REST, and the app that serves them.
 
     list_resolvers     what may be used here, and the policy on each
     geocode            address or place text -> scored candidates
     reverse_geocode    point -> nearest address or place
     search_gazetteer   place name -> candidates with feature type and geometry
     lookup_boundary    code or name -> polygon
+    trace_segment      two anchors and a named road or river -> the line between them
     publish_features   contract features -> hosted feature layer
-
-trace_segment, the seventh tool in the design, is the next phase.
 """
 
 from __future__ import annotations
@@ -45,8 +44,8 @@ INSTRUCTIONS = """\
 Spatialise resolves places through this organisation's ArcGIS locators and feature services, and publishes \
 results to hosted feature layers. Use it with the spatialise-anything skill.
 
-- Call list_resolvers first. It says which locators, gazetteers and boundary sets exist here and what policy \
-allows. Use only what it lists.
+- Call list_resolvers first. It says which locators, gazetteers, boundary sets and line networks exist here \
+and what policy allows. Use only what it lists.
 - Every tool returns candidates, never a decision. You choose, keep the candidates you rejected with a reason, \
 and mark a mention ambiguous when the candidates cannot be separated.
 - Nothing is geocoded or published silently. A batch geocode and every publish first return a dry run with a \
@@ -250,6 +249,40 @@ def build(cfg: Config, *, http: httpx.AsyncClient | None = None, store: Store | 
         the mention ambiguous. Read-only."""
         return await run(Resolvers(cfg, arcgis()).lookup_boundary(boundary, codes, names, state, geometry,
                                                                    max_vertices, limit))
+
+    @mcp.tool(title="Trace a stretch of road or river", annotations=read_only)
+    async def trace_segment(
+        name: Annotated[str, Field(min_length=1, max_length=200, description="The road, river or asset as the "
+                        "text names it, without 'the': 'Western' or 'Western Highway', 'Yarrowee'.")],
+        start: Annotated[LonLat, Field(description="One end of the stretch: the point of a place you have already "
+                         "resolved (e.g. the first town).")],
+        end: Annotated[LonLat, Field(description="The other end, likewise.")],
+        network: Annotated[str | None, Field(description="Network name from list_resolvers (e.g. 'roads'). May be "
+                           "omitted when only one is configured.")] = None,
+        match: Annotated[Literal["prefix", "exact", "contains"], Field(description="prefix (default): 'Western' "
+                         "matches 'WESTERN HIGHWAY' and 'WESTERN FREEWAY', which is what a road that changes "
+                         "class along its length needs. exact when matched_names shows the wrong roads joining "
+                         "in.")] = "prefix",
+        max_vertices: Annotated[int, Field(ge=20, le=5000, description="Vertex budget for the returned "
+                                "line.")] = 300,
+        corridor_km: Annotated[float | None, Field(ge=1, le=100, description="How far either side of the anchors "
+                               "to look for the feature. Default: a quarter of the distance between them, at least "
+                               "5 km.")] = None,
+    ) -> Result:
+        """Draw the line a text describes as 'along X between A and B': the stretch of a named road, river or
+        asset between two anchors. Resolve the two anchors first (they are usually towns), then call this with
+        their points.
+
+        Returns at most one candidate: a LineString that follows the mapped feature, its length, which names
+        it ran along (names_m), and how far each anchor was from the line (start_offset_m, end_offset_m - a
+        town centre is rarely on the highway). uncertainty_m is the larger of those offsets, because that is
+        how well the ends of the stretch are known.
+
+        status 'no_match', 'too_far' or 'no_path' means there is no line and says why; the mention then stays
+        unresolved. Never substitute a straight line. Read-only; sends the name and the two points to the
+        network's host."""
+        return await run(Resolvers(cfg, arcgis()).trace_segment(name, start, end, network, match, max_vertices,
+                                                                 corridor_km))
 
     @mcp.tool(title="Publish features", annotations=ToolAnnotations(
         read_only_hint=False, destructive_hint=False, idempotent_hint=False, open_world_hint=True))

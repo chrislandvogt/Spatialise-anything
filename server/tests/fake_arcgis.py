@@ -55,12 +55,13 @@ class Layer:
     editable: bool = False
     pagination: bool = True
     next_oid: int = 1
+    max_records: int = 2000
 
     def info(self) -> dict[str, Any]:
         out: dict[str, Any] = {
             "currentVersion": 11.5, "id": 0, "name": self.name,
             "type": "Table" if self.geometry_type is None else "Feature Layer",
-            "objectIdField": self.fields[0]["name"], "fields": self.fields, "maxRecordCount": 2000,
+            "objectIdField": self.fields[0]["name"], "fields": self.fields, "maxRecordCount": self.max_records,
             "supportedQueryFormats": "JSON, geoJSON, PBF",
             "capabilities": "Query,Create,Update,Delete,Editing" if self.editable else "Query",
             "advancedQueryCapabilities": {"supportsPagination": self.pagination},
@@ -170,6 +171,25 @@ class FakeArcGIS:
                                                 "state_name_2021": state, "area_albers_sqkm": 100.0},
                                  "geometry": {"rings": rings}})
         self.services["public.example/SA2"] = {"layers": {0: sa2}, "owner": "abs"}
+
+        # A road network. MAIN HIGHWAY runs east along 37 S in 20 segments, changes to MAIN FREEWAY, has a 90 m
+        # hole where the name lapses through a town, and an unrelated MAIN STREET far to the north.
+        roads = Layer("Roads", "esriGeometryPolyline", [fld("OBJECTID", "OID"), fld("ROAD_NAME"), fld("CLASS")],
+                      max_records=8)
+        segs = []
+        for i in range(20):
+            x0, x1 = 144.0 + i * 0.02, 144.0 + (i + 1) * 0.02
+            if i == 9:
+                x1 -= 0.001                                           # the hole
+            pts = [[x0 + (x1 - x0) * k / 4, -37.0 + (0.002 if k in (1, 3) else 0)] for k in range(5)]
+            segs.append(("MAIN HIGHWAY" if i < 14 else "MAIN FREEWAY", pts if i % 3 else pts[::-1]))
+        segs.append(("MAIN STREET", [[144.1, -36.5], [144.2, -36.5]]))
+        segs.append(("MAIN HIGHWAY", [[144.9, -37.0], [145.0, -37.0]]))   # same name, far away, not joined
+        segs.append(("OTHER ROAD", [[144.1, -37.0], [144.1, -36.9]]))
+        for i, (n, pts) in enumerate(segs, start=1):
+            roads.features.append({"attributes": {"OBJECTID": i, "ROAD_NAME": n, "CLASS": "1"},
+                                   "geometry": {"paths": [pts]}})
+        self.services["gis.portal.test/Roads"] = {"layers": {0: roads}, "owner": "admin"}
 
         zones = Layer("Zones", "esriGeometryPolygon", [fld("OBJECTID", "OID"), fld("ZONE_NO", "Integer"),
                                                        fld("ZONE_NAME")], pagination=False)
@@ -419,12 +439,11 @@ class FakeArcGIS:
                 pts = [[g["x"], g["y"]]] if "x" in g else [p for ring in g.get("rings", g.get("paths", [])) for p in ring]
                 return any(x0 <= p[0] <= x1 and y0 <= p[1] <= y1 for p in pts)
             feats = [f for f in feats if inside(f["geometry"])]
-        if form.get("resultRecordCount") and not layer.pagination:
+        if (form.get("resultRecordCount") or form.get("resultOffset")) and not layer.pagination:
             return err(400, "Pagination is not supported.")
-        exceeded = False
-        if form.get("resultRecordCount"):
-            n = int(form["resultRecordCount"])
-            exceeded, feats = len(feats) > n, feats[:n]
+        feats = feats[int(form.get("resultOffset") or 0):]
+        n = min(int(form.get("resultRecordCount") or layer.max_records), layer.max_records)
+        exceeded, feats = len(feats) > n, feats[:n]
         want = None if form.get("outFields", "*") == "*" else form["outFields"].split(",")
         if want and any(w not in names for w in want):
             return JSONResponse({"error": {"code": 400, "message": "Failed to execute query.", "details": []}})

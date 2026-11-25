@@ -5,7 +5,8 @@ lakes, rivers, roads, facilities, SA2s and the organisation's own zones. It
 also publishes to hosted feature layers. It returns candidates; you decide.
 
 Its tools appear as `list_resolvers`, `geocode`, `reverse_geocode`,
-`search_gazetteer`, `lookup_boundary` and `publish_features`. If they are not
+`search_gazetteer`, `lookup_boundary`, `trace_segment` and
+`publish_features`. If they are not
 in your tool list, the connector is not connected: work offline and say which
 mentions you could not attempt.
 
@@ -15,13 +16,15 @@ mentions you could not attempt.
    no network. Do them with the scripts, and keep the resolved points as
    hints for step 3.
 2. **`list_resolvers`** once per run. It tells you which locators,
-   gazetteers and boundary sets exist, which are blocked and why, and whether
+   gazetteers, boundary sets and line networks exist, which are blocked and why, and whether
    publishing is available. Use only what it lists. A blocked resolver is
    blocked: do not look for a way around it.
 3. **Resolve what is left**, passing the frame as hints:
    - addresses -> `geocode(queries=[...], near=[lon, lat])`
    - named features -> `search_gazetteer(names=[...], near=[lon, lat])`
    - codes and zone names -> `lookup_boundary(boundary=..., codes=[...])`
+   - "along R between X and Y" -> resolve X and Y, then
+     `trace_segment(name=R, start=..., end=...)` (see `geometry.md`)
    - a label for a bare coordinate or photo -> `reverse_geocode`
 4. **Decide**, then hand the chosen candidates to `assemble.py` (below).
 5. **Publish** only if the user asked, to the target they named.

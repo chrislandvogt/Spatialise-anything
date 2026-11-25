@@ -111,3 +111,26 @@ async def test_world_geocoder_needs_a_sign_in_for_stored_results(live):
                 "policy": {"allow_public_geocoder": True}})
     out = await call(app, "geocode", {"queries": ["Bendigo Town Hall"]})
     assert "needs a token" in out["_error"] or "sign-in" in out["_error"]
+
+
+async def test_along_the_calder_between_kyneton_and_castlemaine(live):
+    """The plan's own example, on the real Vicmap road network: a line on the freeway, not a point and
+    not a straight chord."""
+    kyneton, castlemaine = [144.459671, -37.227406], [144.218266, -37.058717]   # ABS locality points
+    out = await call(live(), "trace_segment", {"name": "Calder", "start": kyneton, "end": castlemaine})
+    assert out["status"] == "ok" and "CALDER FREEWAY" in out["matched_names"]
+    (c,) = out["candidates"]
+    line = c["geometry"]["coordinates"]
+    assert c["geometry"]["type"] == "LineString" and c["method"] == "trace_segment" and len(line) <= 300
+    assert set(c["names_m"]) <= {n for n in out["matched_names"]} and "CALDER FREEWAY" in c["names_m"]
+    assert 27_000 < c["length_m"] < 32_000 and c["length_m"] >= c["straight_line_m"]
+    assert c["start_offset_m"] < 2500                       # the freeway skirts Kyneton
+    assert 4000 < c["end_offset_m"] < 8000                  # and bypasses Castlemaine by about 6 km
+    assert c["uncertainty_m"] == c["end_offset_m"] and "anchor_approximate" in c["uncertainty_basis"]
+    assert esri.haversine_m(*line[0], *kyneton) < 2500 and esri.haversine_m(*line[-1], *castlemaine) < 8000
+    # it runs up the corridor past Malmsbury, Taradale and Elphinstone (rough town positions; the freeway
+    # bypasses each by a kilometre or three)
+    for town in ([144.3822, -37.1886], [144.3560, -37.1390], [144.3370, -37.1010]):
+        assert min(esri.haversine_m(*p, *town) for p in line) < 4000
+    wrong = await call(live(), "trace_segment", {"name": "Hume", "start": kyneton, "end": castlemaine})
+    assert wrong["status"] in ("no_match", "too_far", "no_path") and wrong["candidates"] == []

@@ -141,3 +141,31 @@ async def test_document_to_hosted_layer_through_a_nominated_locator(web, fake, t
     outcomes = {d["mention"]: d["outcome"] for d in result["details"]}
     assert all(o == "correct" for o in outcomes.values()), outcomes
     assert len(outcomes) == 9 and result["confident_wrong_rate"] == 0 and result["total"].get("dropped", 0) == 0
+
+
+async def test_a_stretch_of_road_is_traced_assembled_and_published_as_a_line(web, fake, tmp_path):
+    """Phase 4's sentence, on the stand-in: 'along R between X and Y' ends up as a line feature in a hosted
+    layer. (The real road network version is in test_live.py.)"""
+    async with web() as w:
+        token = (await w.sign_in())["access_token"]
+        res = await w.tool(token, "list_resolvers")
+        assert [n["name"] for n in res["networks"]] == ["roads"]
+        traced = await w.tool(token, "trace_segment", {"name": "Main", "start": [144.05, -36.99], "end": [144.33, -37.02]})
+        assert traced["status"] == "ok"
+        decisions = [{"mention": "along the Main between Easton and Weston",
+                      "source": {"doc": "log.txt", "char_start": 20, "char_end": 60}, "tier": "relative",
+                      "candidate": traced["candidates"][0], "confidence": 0.8}]
+        (tmp_path / "d.json").write_text(json.dumps(decisions))
+        run = subprocess.run([sys.executable, str(SCRIPTS / "assemble.py"), "--decisions", str(tmp_path / "d.json"),
+                              "-o", str(tmp_path / "o.geojson")], capture_output=True, text=True)
+        assert run.returncode == 0, run.stdout + run.stderr
+        fc = json.loads((tmp_path / "o.geojson").read_text())
+        plan = await w.tool(token, "publish_features", {"features": fc, "create": "Road closures"})
+        assert plan["plan"]["writes"] == {"lines": 1}
+        done = await w.tool(token, "publish_features", {"features": fc, "create": "Road closures",
+                                                        "confirm_token": plan["confirm_token"]})
+        assert done["status"] == "published"
+    (row,) = fake.services["gis.portal.test/Road_closures"]["layers"][1].features
+    assert len(row["geometry"]["paths"][0]) > 20 and row["attributes"]["method"] == "trace_segment"
+    assert row["attributes"]["flags"] == "anchor_approximate" and row["attributes"]["tier"] == "relative"
+    assert row["attributes"]["label"] == "MAIN HIGHWAY / MAIN FREEWAY" and row["attributes"]["resolver_name"] == "roads"

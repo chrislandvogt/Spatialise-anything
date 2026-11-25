@@ -32,6 +32,9 @@ BASE: dict[str, Any] = {
          "type_uncertainty_m": {"LAKE": 5000, "LOCALITY": 2000}},
         {"name": "water", "url": f"{SERVICES}/Water/FeatureServer/0", "name_field": "NAME", "type_field": "TYPE"},
     ],
+    "networks": [
+        {"name": "roads", "url": f"{SERVICES}/Roads/FeatureServer/0", "name_field": "ROAD_NAME", "version": "roads-1"},
+    ],
     "boundaries": [
         {"name": "sa2", "url": f"{PUBLIC}/SA2/MapServer/0", "code_field": "sa2_code_2021",
          "name_field": "sa2_name_2021", "state_field": "state_name_2021", "version": "ASGS 2021"},
