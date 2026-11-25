@@ -40,6 +40,22 @@ the same corpus prompts for both arms and score each folder with
 bare model on tiers 2 and 3?** If not, the judgement layer is not earning its
 place.
 
+## 4. With the connector (phase 3 exit test)
+
+`server/tests/test_phase3_exit.py` runs the whole path - sign-in, geocode
+through a nominated locator, gazetteer search, `assemble.py`, publish, score -
+against an in-process ArcGIS stand-in, with the model's decisions written out
+by hand. It proves the plumbing. The real exit test is the same path through
+Claude against an ArcGIS organisation: connect the server, run the
+`t1-addresses` and `t2-*` items, and score without `--offline`:
+
+```
+python eval/score.py --outputs runs/claude-online-<date>
+```
+
+`t1-addresses` reference positions are OpenStreetMap's; re-baseline them
+against the locator you nominate before reading much into that row.
+
 ## Reading the scorer
 
 | Outcome | Meaning |

@@ -52,7 +52,7 @@ Run them with `python3 scripts/<name>.py --help` for full options.
    - named: `gazetteer.py search "Kensington" --state VIC --near LON,LAT ...`
      (or `gazetteer.py batch` for many). Offline covers localities, postcodes
      and LGAs only. Lakes, roads, rivers, facilities and addresses need the
-     MCP server - see "Without the connector".
+     connector: `geocode`, `search_gazetteer`, `lookup_boundary`.
    - relative: resolve the anchors first, then
      `build_geometry.py offset|buffer|sector|line ...`
 6. **Disambiguate.** Rank by the frame, by distance to mentions already
@@ -77,7 +77,7 @@ Run them with `python3 scripts/<name>.py --help` for full options.
     unresolved mention with why, then the one batched question if an answer
     would change the map. Give the GeoJSON and the preview.
 
-## Without the connector
+## With and without the connector
 
 The skill works with no MCP server. Offline it covers tier 0, postcodes,
 LGAs and localities (ABS ASGS boundaries, bundled), and relative geometry
@@ -88,10 +88,16 @@ say plainly which mentions you could not attempt. Where a coarse offline
 answer is still useful (an address's locality), you may emit that instead
 with flag `offline_only` and the locality's uncertainty - say so.
 
-With the Spatialise MCP server connected, call `list_resolvers` first and
-follow its policy: the customer's own locator first, a public geocoder only
-if it is enabled. Never geocode silently - report how many geocodes a batch
-will use before running it.
+With the Spatialise connector attached (tools `list_resolvers`, `geocode`,
+`search_gazetteer`, `lookup_boundary`, `reverse_geocode`,
+`publish_features`), read `references/connector.md` before the first call.
+In short: do the offline tiers first; call `list_resolvers` and use only what
+it allows (the customer's own locator before any other, a public geocoder
+only if enabled); every tool returns candidates and you choose; a batch
+geocode and every publish return a dry run first - report the count,
+destination and cost to the user and repeat the call with the
+`confirm_token`. Pass chosen candidates to `assemble.py` as the tool returned
+them (`"candidate": {...}`), never retyped.
 
 ## Sensitive material
 
@@ -107,4 +113,5 @@ not.
 - `references/disambiguation.md` - framing, ranking, worked examples
 - `references/geometry.md` - words to shapes, construction recipes
 - `references/scoring.md` - confidence and uncertainty values
+- `references/connector.md` - using the MCP server: order of work, confirmations, publishing
 - `schema/feature.schema.json` - the contract as JSON Schema

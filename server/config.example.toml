@@ -1,0 +1,129 @@
+# Spatialise MCP server - example configuration.
+#
+# This file says which resolvers the server may use and the policy on each.
+# It holds no secrets: those come from the environment (see README.md).
+#
+# As written it runs with no ArcGIS organisation at all, against public
+# Australian services, so you can try the server before wiring up your own:
+#   - ABS statistical and administrative boundaries (CC BY 4.0)
+#   - VICNAMES, the Victorian register of geographic names
+# Replace or extend these with your organisation's own layers.
+
+[portal]
+# ArcGIS Online, or your ArcGIS Enterprise portal, e.g. "https://gis.agency.gov.au/portal".
+url = "https://www.arcgis.com"
+# Hosts the signed-in user's token may be sent to. The portal's own host is
+# always trusted, and *.arcgis.com is added for ArcGIS Online. For Enterprise,
+# list every federated server here. Anything not listed never sees a token.
+# trusted_hosts = ["gis.agency.gov.au", "maps.agency.gov.au"]
+# Optional: only members of these organisations may sign in.
+# allowed_org_ids = ["AbCdEfGh12345678"]
+
+[policy]
+# Public geocoders stay off unless you turn them on. With this false, a
+# locator of kind "public" is listed by list_resolvers as blocked and refused.
+allow_public_geocoder = false
+allow_publish = true
+# A geocode call with more queries than this returns a count first and needs
+# a confirmation token to run. 0 means every geocode is confirmed.
+confirm_batches_over = 1
+max_batch = 200
+max_publish_features = 2000
+default_country = "AUS"
+
+# ---------------------------------------------------------------- locators
+# Order of use: every "customer" locator, then "org", then "public".
+#
+# [[locators]]
+# name = "agency-addresses"
+# url = "https://gis.agency.gov.au/server/rest/services/Locators/Addresses/GeocodeServer"
+# kind = "customer"
+# version = "G-NAF 2026-11"
+# description = "The agency's own address locator. No credits, nothing leaves the network."
+#
+# [[locators]]
+# name = "arcgis-world"
+# url = "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer"
+# kind = "public"            # required for Esri's public geocoder; blocked unless allow_public_geocoder
+# # Results are always persisted, so they are billed as stored geocodes:
+# # for_storage = true and credits_per_1000 = 40 are the defaults for this host.
+# # An Enterprise portal that proxies the World Geocoding Service serves it from
+# # the portal's own host: give that URL here and still mark it kind = "public".
+
+# ---------------------------------------------------------------- gazetteers
+# A gazetteer is any layer with one feature per named place.
+
+[[gazetteers]]
+name = "vicnames"
+url = "https://services-ap1.arcgis.com/P744lA0wf4LlBZ84/arcgis/rest/services/Vicnames_Placenames/FeatureServer/0"
+auth = "none"                 # a public layer: no token is sent
+name_field = "PLACE_NAME"
+type_field = "FEATURE_TYPE"
+state_field = "State"
+id_field = "PLACE_ID"
+where = "PLACE_NAME_STATUS = 'REGISTERED'"
+description = "VICNAMES, the Victorian register of geographic names: lakes, watercourses, parks, localities, stations, schools and more. Points only; Victoria only."
+version = "VICNAMES (live)"
+# A point cannot say how big a lake is. These are the positional uncertainties
+# reported for point features, by feature type; candidates are flagged as defaults.
+default_uncertainty_m = 500
+[gazetteers.type_uncertainty_m]
+LAKE = 5000
+RESERVOIR = 5000
+WATERCOURSE = 10000
+LOCALITY = 2000
+"STATE FOREST" = 10000
+PARK = 1000
+MOUNTAIN = 1000
+
+# ---------------------------------------------------------------- boundaries
+
+[[boundaries]]
+name = "sa2"
+url = "https://geo.abs.gov.au/arcgis/rest/services/ASGS2021/SA2/MapServer/0"
+generalised_url = "https://geo.abs.gov.au/arcgis/rest/services/ASGS2021/SA2/MapServer/1"
+auth = "none"
+code_field = "sa2_code_2021"
+name_field = "sa2_name_2021"
+state_field = "state_name_2021"
+extra_fields = ["sa3_name_2021", "sa4_name_2021"]
+description = "ABS Statistical Areas Level 2, 2021. State is spelled out, e.g. 'Victoria'."
+version = "ABS ASGS Edition 3 (2021)"
+
+[[boundaries]]
+name = "lga"
+url = "https://geo.abs.gov.au/arcgis/rest/services/ASGS2025/LGA/MapServer/0"
+generalised_url = "https://geo.abs.gov.au/arcgis/rest/services/ASGS2025/LGA/MapServer/1"
+auth = "none"
+code_field = "LGA_CODE_2025"
+name_field = "LGA_NAME_2025"
+state_field = "STATE_NAME_2021"
+description = "ABS Local Government Areas, 2025. Names carry no 'City of' or 'Shire': search 'Greater Bendigo'."
+version = "ABS ASGS Edition 3 (LGA 2025)"
+
+[[boundaries]]
+name = "postcode"
+url = "https://geo.abs.gov.au/arcgis/rest/services/ASGS2021/POA/MapServer/0"
+generalised_url = "https://geo.abs.gov.au/arcgis/rest/services/ASGS2021/POA/MapServer/1"
+auth = "none"
+code_field = "poa_code_2021"
+description = "ABS Postal Areas, 2021 - an approximation of Australia Post postcodes."
+version = "ABS ASGS Edition 3 (2021)"
+
+[[boundaries]]
+name = "locality"
+url = "https://geo.abs.gov.au/arcgis/rest/services/ASGS2021/SAL/MapServer/0"
+generalised_url = "https://geo.abs.gov.au/arcgis/rest/services/ASGS2021/SAL/MapServer/1"
+auth = "none"
+code_field = "sal_code_2021"
+name_field = "sal_name_2021"
+state_field = "state_name_2021"
+description = "ABS Suburbs and Localities, 2021. Duplicate names carry a qualifier, e.g. 'Richmond (Vic.)'."
+version = "ABS ASGS Edition 3 (2021)"
+
+# Your own zones work the same way:
+# [[boundaries]]
+# name = "depot-zones"
+# url = "https://gis.agency.gov.au/server/rest/services/Operations/Zones/FeatureServer/0"
+# code_field = "ZONE_NO"
+# name_field = "ZONE_NAME"

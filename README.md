@@ -11,9 +11,11 @@ candidates it was not.
 The name borrows from Segment Anything and Depth Anything: one output
 contract, many input adapters.
 
-> **Status: v0.1.0 - phases 1 and 2 of 5.** The output contract, the
-> evaluation corpus and the offline skill are built and tested. The MCP server
-> (locators, feature services, publishing) is next. See [Roadmap](#roadmap).
+> **Status: phases 1 to 3 of 5.** The output contract, the evaluation corpus
+> and the offline skill are built and tested. The MCP server (locators,
+> gazetteers, boundaries, publishing, sign-in) is built and tested against an
+> ArcGIS stand-in and live public services, but **has not yet been run against
+> a real ArcGIS organisation**. See [Roadmap](#roadmap).
 
 ## What it does
 
@@ -34,7 +36,9 @@ Three rules hold throughout:
 - **Confidence is not precision.** A suburb centroid can be the right place
   and still be 1.5 km loose; both numbers are reported.
 - **Nothing is geocoded silently.** Offline by default; network resolvers only
-  when connected and allowed, with the cost reported first.
+  when connected and allowed. The server reports the count, destination and
+  cost of a batch and will not run it without the confirmation that report
+  carries.
 
 ## The output contract
 
@@ -76,10 +80,10 @@ the places in a file.
 **claude.ai / Cowork** - build the zip and upload it:
 
 ```
-python tools/package.py      # -> dist/spatialise-plugin-0.1.0.zip
+python tools/package.py      # -> dist/spatialise-plugin-0.2.0.zip
 ```
 
-The skill alone (`dist/spatialise-anything-skill-0.1.0.zip`) can also be
+The skill alone (`dist/spatialise-anything-skill-0.2.0.zip`) can also be
 uploaded as a standalone skill.
 
 ## How it works
@@ -88,7 +92,7 @@ uploaded as a standalone skill.
 input --> skill (detect, tier, frame, disambiguate, choose geometry, score)
             |                                   |
             v                                   v
-   offline scripts + bundled gazetteer    MCP server (phase 3: locators,
+   offline scripts + bundled gazetteer    MCP server (ArcGIS locators,
    (pure Python, no network)              feature services, publishing)
             \___________________  ____________/
                                 \/
@@ -113,6 +117,33 @@ Claude's sandbox with no installs:
 Geodesy (Krüger-series Transverse Mercator, MGRS, the GDA94 -> GDA2020
 Helmert, Vincenty) is implemented from the published formulas and tested
 against PROJ to the nanometre.
+
+### The connector
+
+[`server/`](server/README.md) is the MCP server: six tools over ArcGIS REST
+that return candidates and never decide.
+
+| Tool | Does |
+|---|---|
+| `list_resolvers` | Which locators, gazetteers and boundary sets may be used, and the policy on each |
+| `geocode` / `reverse_geocode` | Address text to scored candidates; point to nearest address |
+| `search_gazetteer` | Place name to candidates with feature type - lakes, rivers, facilities |
+| `lookup_boundary` | Code or name to a polygon - SA2, LGA, your own zones |
+| `publish_features` | Contract features to a hosted feature layer, as the signed-in user |
+
+The operator's config decides which resolvers exist: the customer's own
+locator first, a public geocoder only if switched on. Users sign in with
+their own ArcGIS account, so portal permissions apply. It runs with no ArcGIS
+organisation at all against public ABS and VICNAMES services:
+
+```
+pip install -e "server[dev]"
+spatialise-mcp serve --config server/config.example.toml
+claude mcp add --transport http spatialise http://127.0.0.1:8000/mcp
+```
+
+Deployment, sign-in set-up and the security model are in
+[`server/README.md`](server/README.md).
 
 ## Evaluation
 
@@ -139,7 +170,9 @@ against Claude without the skill, is described in [`eval/README.md`](eval/README
 
 ```
 pip install -r requirements-dev.txt
-python -m pytest
+python -m pytest                       # skill, corpus and scorer
+pip install -e "server[dev]"
+python -m pytest server/tests          # MCP server
 ```
 
 Rebuild the gazetteer from ABS downloads with `tools/build_gazetteer.py`;
@@ -151,15 +184,17 @@ regenerate the corpus with `tools/make_corpus.py`.
 |---|---|---|---|
 | 1 Contract and corpus | Feature schema, hand-checkable corpus | Schema validates every expected output | Done (3 items await a human hand-check) |
 | 2 Skill v0, offline | Tier 0, offline postcodes, localities, LGAs, GeoJSON, preview | Meets the tier 0 bar in Claude with no connector | Scripts meet it; a recorded Claude run is next |
-| 3 MCP server | `list_resolvers`, `geocode`, `search_gazetteer`, `lookup_boundary`, `publish_features` on ArcGIS Online then Enterprise | Addresses and ambiguous names land in a hosted feature layer via a nominated locator | Not started |
+| 3 MCP server | `list_resolvers`, `geocode`, `search_gazetteer`, `lookup_boundary`, `publish_features` on ArcGIS Online then Enterprise | Addresses and ambiguous names land in a hosted feature layer via a nominated locator | Built, plus `reverse_geocode` and OAuth sign-in. Exit test passes against the stand-in; **not yet run on a real organisation** (`server/scripts/live_smoke.py`) |
 | 4 Relative tier and plugin | `trace_segment`, constructed geometry, packaged plugin | "Along the Calder between Kyneton and Castlemaine" returns a line on the freeway; zip installs on claude.ai | Constructed geometry and packaging done; `trace_segment` not started |
-| 5 Customer-ready | Customer-locator-only config, evaluation report, demo script | End-to-end against an Enterprise with the public geocoder disabled | Not started |
+| 5 Customer-ready | Customer-locator-only config, evaluation report, demo script | End-to-end against an Enterprise with the public geocoder disabled | Customer-locator-only is the server's default; the rest not started |
 
 ## Limitations
 
 - Offline coverage is Australian localities, postal areas and LGAs only.
-  Street addresses, roads, rivers, lakes, facilities and asset IDs need the
-  MCP server and come back `unresolved` with `needs_network` until then.
+  Street addresses, lakes, rivers, facilities and custom zones need the
+  connector; without it they come back `unresolved` with `needs_network`.
+- "Along the X between A and B" needs `trace_segment`, which is not built.
+- The connector has not been run against a real ArcGIS organisation yet.
 - A conversational tool, not a bulk pipeline.
 - The confidence threshold (0.7) is provisional until set from a full
   evaluation run.
