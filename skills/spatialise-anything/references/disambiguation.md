@@ -79,7 +79,7 @@ say why.
 ## When the gazetteer has nothing
 
 - A place type the offline gazetteer does not hold (lake, river, road,
-  facility, mountain, park): unresolved, `needs_network`, unless the MCP
-  server is connected (`search_gazetteer`).
+  facility, mountain, park): with the connector attached, `search_gazetteer`
+  (see `connector.md`); without it, unresolved with `needs_network`.
 - An unknown name: unresolved with no candidates. Do not invent coordinates
   from memory - a remembered coordinate has no resolver and no provenance.

@@ -189,7 +189,9 @@
         "Lake Eppalock"
       ],
       "review": "generated_from_reference",
-      "notes": []
+      "notes": [
+        "Lake Eppalock is a reservoir about 12 km long. A single point for it is only good to about 5 km: OpenStreetMap's point and the VICNAMES register's point are 4.5 km apart. A polygon of the lake is the better answer and is accepted."
+      ]
     },
     {
       "id": "t2-springfield",

@@ -49,3 +49,35 @@ jobs:
           PY
       - name: Package
         run: python tools/package.py
+
+  server:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install -e "server[dev]"
+      - name: Vendored contract is in sync with the skill
+        run: python tools/sync_contract.py --check
+      - name: Server tests (in-process ArcGIS stand-in, no network)
+        run: python -m pytest server/tests
+      - name: Example config loads and the CLI starts
+        run: |
+          spatialise-mcp --version
+          python -c "from spatialise_mcp import config; c = config.load('server/config.example.toml', {}); print(len(c.boundaries), 'boundary sets')"
+
+  server-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t spatialise-mcp server/
+      - name: Container starts, is healthy and runs unprivileged
+        run: |
+          docker run -d --name spatialise-ci -p 8000:8000 spatialise-mcp
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8000/healthz && break || sleep 1; done
+          curl -sf http://127.0.0.1:8000/healthz || { docker logs spatialise-ci; exit 1; }
+          test "$(docker exec spatialise-ci id -u)" = "10001"

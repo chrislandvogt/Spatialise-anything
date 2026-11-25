@@ -33,6 +33,17 @@ Decision forms (one object per mention):
     {"mention": "the treatment plant", "source": {...}, "tier": "implicit", "status": "unresolved",
      "flags": ["tier4_disabled"], "method": "not_attempted"}
 
+  Connector pick (a candidate exactly as a Spatialise MCP tool returned it)
+    {"mention": "45 Lydiard St North, Ballarat", "source": {...}, "tier": "structured",
+     "candidate": {<candidate from geocode / search_gazetteer / lookup_boundary>}, "confidence": 0.9,
+     "others": [{"candidate": {<another candidate>}, "why": "wrong town: the report is about Ballarat"}]}
+    Geometry, label, uncertainty, resolver and method are taken from the candidate, unchanged.
+    Add "geometry": "point" to place an area candidate at its point (uncertainty becomes its radius).
+
+  Connector ambiguous
+    {"mention": "Main Street", "source": {...}, "tier": "structured", "status": "ambiguous", "confidence": 0.5,
+     "others": [{"candidate": {...}, "why": "equal score, nothing in the text separates them"}, {...}]}
+
 Usage:
     assemble.py --features a.geojson b.geojson --decisions d.json -o out.geojson [--threshold 0.7]
 """
@@ -93,6 +104,9 @@ def expand(dec: dict, gz: _Gz, threshold: float) -> dict:
                               candidates=dec.get("candidate_list", []), source_crs=dec.get("source_crs", "n/a"),
                               flags=flags)
 
+    if "candidate" in dec or "others" in dec:
+        return _from_connector(dec, mention, source, tier, status, flags, conf, threshold)
+
     if status == "ambiguous" or ("candidates" in dec and "pick" not in dec):
         cands = []
         for ref, why in dec.get("candidates", {}).items():
@@ -142,7 +156,69 @@ def expand(dec: dict, gz: _Gz, threshold: float) -> dict:
 
     if "feature" in dec:
         return dec["feature"]
-    raise ValueError(f"decision for {mention!r} has no pick, candidates, constructed geometry or status")
+    raise ValueError(f"decision for {mention!r} has no pick, candidate, candidates, constructed geometry or status")
+
+
+def _connector_geometry(cand: dict, as_point: bool) -> tuple[dict, float, list[str]]:
+    """Geometry, uncertainty and flags for a candidate a Spatialise MCP tool returned."""
+    for key in ("label", "resolver", "method"):
+        if not cand.get(key):
+            raise ValueError(f"connector candidate is missing {key!r}: pass the candidate as the tool returned it")
+    # The connector names any flag a candidate needs in its uncertainty_basis.
+    flags = [fl for fl in ("default_uncertainty", "anchor_approximate")
+             if fl in str(cand.get("uncertainty_basis", ""))]
+    shape = cand.get("geometry")
+    if shape and not as_point:
+        return shape, float(cand.get("uncertainty_m") or 0.0), flags
+    pt = cand.get("point")
+    if not pt:
+        raise ValueError(f"connector candidate {cand.get('label')!r} has no point or geometry (was it fetched "
+                         "with geometry='none'?)")
+    if shape or cand.get("radius_m") and cand.get("method") == "boundary_join":
+        # An area placed at a point: the honest uncertainty is the size of the area.
+        unc = cand.get("radius_m") or cand.get("uncertainty_m")
+    else:
+        unc = cand.get("uncertainty_m")
+    if unc is None:
+        raise ValueError(f"connector candidate {cand.get('label')!r} has no uncertainty_m")
+    return C.point(pt[0], pt[1]), float(unc), flags
+
+
+def _connector_reject(entry: dict) -> dict:
+    cand, why = entry.get("candidate") or {}, entry.get("why")
+    if not cand.get("label") or not why:
+        raise ValueError("each entry in 'others' needs a candidate (with its label) and a 'why'")
+    out = {"label": cand["label"] + (f" ({cand['kind']})" if cand.get("kind") else ""), "rejected": why}
+    if cand.get("id"):
+        out["id"] = str(cand["id"])
+    if cand.get("point"):
+        out["geometry"] = C.point(cand["point"][0], cand["point"][1])
+    if isinstance(cand.get("score"), (int, float)):
+        out["confidence"] = C.clamp01(cand["score"])
+    return out
+
+
+def _from_connector(dec, mention, source, tier, status, flags, conf, threshold) -> dict:
+    others = [_connector_reject(e) for e in dec.get("others", [])]
+    if "candidate" not in dec or status == "ambiguous":
+        pool = ([_connector_reject({"candidate": dec["candidate"], "why": dec.get("why", "could not be separated "
+                                    "from the other candidates")})] if "candidate" in dec else []) + others
+        if not pool:
+            raise ValueError(f"ambiguous decision for {mention!r} lists no candidates")
+        first = (dec.get("candidate") or dec["others"][0]["candidate"])
+        return C.make_feature(geometry=None, label=None, mention=mention, source=source, tier=tier,
+                              method=first.get("method", "locator"), resolver=first.get("resolver", {"name": "connector"}),
+                              confidence=min(conf, threshold - 0.001), uncertainty_m=None, status="ambiguous",
+                              candidates=pool, source_crs="EPSG:4326", flags=flags)
+    cand = dec["candidate"]
+    geom, unc, cand_flags = _connector_geometry(cand, dec.get("geometry") == "point")
+    st = "resolved" if conf >= threshold else "ambiguous"
+    if st == "ambiguous":
+        others.insert(0, _connector_reject({"candidate": cand, "why": "best candidate, but below threshold"}))
+    return C.make_feature(geometry=geom, label=dec.get("label", cand["label"]), mention=mention, source=source,
+                          tier=tier, method=cand["method"], resolver=cand["resolver"], confidence=conf,
+                          uncertainty_m=unc, status=st, candidates=others, source_crs="EPSG:4326",
+                          flags=flags + cand_flags)
 
 
 def _span(f):
@@ -186,11 +262,21 @@ def main(argv=None):
         inputs += (fc.get("spatialise") or {}).get("inputs", [])
     gz = _Gz(a.db)
     if a.decisions:
-        for dec in json.loads(Path(a.decisions).read_text(encoding="utf-8")):
-            feats.append(expand(dec, gz, a.threshold))
+        problems = []
+        for i, dec in enumerate(json.loads(Path(a.decisions).read_text(encoding="utf-8"))):
+            try:
+                feats.append(expand(dec, gz, a.threshold))
+            except (ValueError, KeyError, TypeError) as e:
+                what = f"missing {e}" if isinstance(e, KeyError) else str(e)
+                problems.append(f"decision[{i}] ({str(dec.get('mention', '?'))[:40]!r}): {what}")
+                continue
             doc = (dec.get("source") or {}).get("doc") if isinstance(dec.get("source"), dict) else dec.get("source")
             if doc:
                 inputs.append(doc)
+        if problems:
+            # A decision that cannot be expanded would be a dropped mention: stop, write nothing.
+            print(json.dumps({"out": None, "valid": False, "errors": problems}, indent=2))
+            return 1
     kept, dropped = lowest_tier_wins(feats)
     frame = json.loads(a.frame) if a.frame else None
     fc = C.make_collection(kept, inputs=sorted(set(inputs)), threshold=a.threshold, frame=frame)

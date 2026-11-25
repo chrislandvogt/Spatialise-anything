@@ -447,7 +447,10 @@ Water quality sampling continues at Lake Eppalock.
     named(it, abs_, doc, "Golden Square", "locality", "Golden Square", "Golden Square, VIC")
     it.add(network=True, geometry=pt(144.5428476, -36.9045757), label="Lake Eppalock", mention="Lake Eppalock",
            source=it.span(doc, "Lake Eppalock"), tier="named", method="gazetteer", resolver=OSM_RESOLVER,
-           confidence=0.9, uncertainty_m=3000, status="resolved", source_crs="EPSG:4326")
+           confidence=0.9, uncertainty_m=5000, status="resolved", source_crs="EPSG:4326")
+    it.notes.append("Lake Eppalock is a reservoir about 12 km long. A single point for it is only good to about "
+                    "5 km: OpenStreetMap's point and the VICNAMES register's point are 4.5 km apart. A polygon "
+                    "of the lake is the better answer and is accepted.")
     items.append(it.write())
 
     # ---------------------------------------------------------- tier 2: Springfield
