@@ -1,0 +1,5 @@
+LEGACY SITE NOTES (synthetic test document)
+Old bore, from a 1985 survey plan: AMG66 zone 55, E 273300 N 5918050.
+Same bore re-surveyed in GDA94: -36.85640, 144.45720
+Weather station (WGS84): -37.06400, 144.21700
+Trig point, no datum given: -36.75700, 144.27900

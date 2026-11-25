@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/chrislandvogt/spatialise-anything/schema/feature.schema.json",
+  "title": "Spatialise Anything feature collection",
+  "description": "Contract v0.1.0. Every mention in every input becomes one GeoJSON Feature with these properties. validate_features.py enforces this schema plus the cross-field rules that JSON Schema cannot express (status vs geometry, confidence vs threshold, ring closure).",
+  "type": "object",
+  "required": ["type", "features"],
+  "properties": {
+    "type": { "const": "FeatureCollection" },
+    "spatialise": {
+      "type": "object",
+      "required": ["contract_version"],
+      "properties": {
+        "contract_version": { "type": "string" },
+        "generated": { "type": "string" },
+        "inputs": { "type": "array", "items": { "type": "string" } },
+        "counts": { "type": "object" },
+        "frame": { "type": "object" },
+        "threshold": { "type": "number" }
+      }
+    },
+    "features": { "type": "array", "items": { "$ref": "#/$defs/feature" } }
+  },
+  "$defs": {
+    "position": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 3,
+      "items": { "type": "number" }
+    },
+    "geometry": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["type", "coordinates"],
+          "properties": {
+            "type": { "enum": ["Point", "MultiPoint", "LineString", "MultiLineString", "Polygon", "MultiPolygon"] },
+            "coordinates": { "type": "array" }
+          }
+        }
+      ]
+    },
+    "source": {
+      "type": "object",
+      "required": ["doc"],
+      "additionalProperties": false,
+      "properties": {
+        "doc": { "type": "string", "minLength": 1 },
+        "page": { "type": "integer", "minimum": 1 },
+        "sheet": { "type": "string" },
+        "row": { "type": "integer", "minimum": 1 },
+        "column": { "type": "string" },
+        "char_start": { "type": "integer", "minimum": 0 },
+        "char_end": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "required": ["label", "rejected"],
+      "properties": {
+        "label": { "type": "string" },
+        "rejected": { "type": "string", "minLength": 1, "description": "Why this candidate was not chosen. For an ambiguous feature, why it could not be separated from the others." },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "geometry": { "$ref": "#/$defs/geometry" },
+        "id": { "type": "string" }
+      }
+    },
+    "feature": {
+      "type": "object",
+      "required": ["type", "geometry", "properties"],
+      "properties": {
+        "type": { "const": "Feature" },
+        "geometry": { "$ref": "#/$defs/geometry" },
+        "properties": {
+          "type": "object",
+          "required": [
+            "label", "mention", "source", "tier", "method", "resolver",
+            "confidence", "uncertainty_m", "status", "candidates", "source_crs"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "label": { "type": ["string", "null"] },
+            "mention": { "type": "string", "minLength": 1 },
+            "source": { "$ref": "#/$defs/source" },
+            "tier": { "enum": ["explicit", "structured", "named", "relative", "implicit"] },
+            "method": { "type": "string", "minLength": 1 },
+            "resolver": {
+              "type": "object",
+              "required": ["name"],
+              "properties": {
+                "name": { "type": "string" },
+                "version": { "type": "string" }
+              }
+            },
+            "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+            "uncertainty_m": { "type": ["number", "null"], "minimum": 0 },
+            "status": { "enum": ["resolved", "ambiguous", "unresolved"] },
+            "candidates": { "type": "array", "items": { "$ref": "#/$defs/candidate" } },
+            "source_crs": { "type": "string", "minLength": 1 },
+            "flags": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+          }
+        }
+      }
+    }
+  }
+}

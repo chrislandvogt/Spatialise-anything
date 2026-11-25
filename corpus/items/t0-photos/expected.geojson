@@ -1,0 +1,103 @@
+{
+  "type": "FeatureCollection",
+  "spatialise": {
+    "contract_version": "0.1.0",
+    "generated": "corpus",
+    "inputs": [
+      "IMG_0001.jpg",
+      "IMG_0002.jpg",
+      "IMG_0003.jpg"
+    ],
+    "counts": {
+      "resolved": 2,
+      "ambiguous": 0,
+      "unresolved": 1
+    },
+    "threshold": 0.7,
+    "frame": {
+      "country": "AU",
+      "state": "VIC"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.4551,
+          -37.2465
+        ]
+      },
+      "properties": {
+        "label": null,
+        "mention": "photo IMG_0001.jpg",
+        "source": {
+          "doc": "IMG_0001.jpg"
+        },
+        "tier": "explicit",
+        "method": "exif",
+        "resolver": {
+          "name": "read_exif"
+        },
+        "confidence": 0.95,
+        "uncertainty_m": 4.5,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:4326"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.219,
+          -37.0652
+        ]
+      },
+      "properties": {
+        "label": null,
+        "mention": "photo IMG_0002.jpg",
+        "source": {
+          "doc": "IMG_0002.jpg"
+        },
+        "tier": "explicit",
+        "method": "exif",
+        "resolver": {
+          "name": "read_exif"
+        },
+        "confidence": 0.95,
+        "uncertainty_m": 10.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:4326 (assumed)",
+        "flags": [
+          "datum_assumed",
+          "default_uncertainty"
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "label": null,
+        "mention": "photo IMG_0003.jpg",
+        "source": {
+          "doc": "IMG_0003.jpg"
+        },
+        "tier": "explicit",
+        "method": "exif",
+        "resolver": {
+          "name": "read_exif"
+        },
+        "confidence": 0.0,
+        "uncertainty_m": null,
+        "status": "unresolved",
+        "candidates": [],
+        "source_crs": "unknown"
+      }
+    }
+  ]
+}

@@ -1,0 +1,213 @@
+{
+  "type": "FeatureCollection",
+  "spatialise": {
+    "contract_version": "0.1.0",
+    "generated": "corpus",
+    "inputs": [
+      "streetlight-audit.txt"
+    ],
+    "counts": {
+      "resolved": 6,
+      "ambiguous": 0,
+      "unresolved": 0
+    },
+    "threshold": 0.7,
+    "frame": {
+      "country": "AU",
+      "state": "VIC",
+      "region": "Bendigo"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.2418531,
+          -36.8065326
+        ]
+      },
+      "properties": {
+        "label": "Kangaroo Flat, VIC",
+        "mention": "Kangaroo Flat",
+        "source": {
+          "doc": "streetlight-audit.txt",
+          "char_start": 69,
+          "char_end": 82
+        },
+        "tier": "named",
+        "method": "gazetteer",
+        "resolver": {
+          "name": "reference:ABS ASGS Ed3",
+          "version": "SAL2021/POA2021/LGA2025"
+        },
+        "confidence": 0.9,
+        "uncertainty_m": 2403.0,
+        "status": "resolved",
+        "candidates": [
+          {
+            "label": "Kangaroo Flat, SA",
+            "rejected": "the other suburbs named are all Bendigo"
+          }
+        ],
+        "source_crs": "EPSG:7844"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.2657967,
+          -36.7063293
+        ]
+      },
+      "properties": {
+        "label": "Eaglehawk, VIC",
+        "mention": "Eaglehawk",
+        "source": {
+          "doc": "streetlight-audit.txt",
+          "char_start": 84,
+          "char_end": 93
+        },
+        "tier": "named",
+        "method": "gazetteer",
+        "resolver": {
+          "name": "reference:ABS ASGS Ed3",
+          "version": "SAL2021/POA2021/LGA2025"
+        },
+        "confidence": 0.9,
+        "uncertainty_m": 2153.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:7844"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.3086679,
+          -36.7024979
+        ]
+      },
+      "properties": {
+        "label": "Epsom, VIC",
+        "mention": "Epsom",
+        "source": {
+          "doc": "streetlight-audit.txt",
+          "char_start": 95,
+          "char_end": 100
+        },
+        "tier": "named",
+        "method": "gazetteer",
+        "resolver": {
+          "name": "reference:ABS ASGS Ed3",
+          "version": "SAL2021/POA2021/LGA2025"
+        },
+        "confidence": 0.9,
+        "uncertainty_m": 1686.0,
+        "status": "resolved",
+        "candidates": [
+          {
+            "label": "Epsom, QLD",
+            "rejected": "the other suburbs named are all Bendigo"
+          }
+        ],
+        "source_crs": "EPSG:7844"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.3154819,
+          -36.7657102
+        ]
+      },
+      "properties": {
+        "label": "Strathdale, VIC",
+        "mention": "Strathdale",
+        "source": {
+          "doc": "streetlight-audit.txt",
+          "char_start": 105,
+          "char_end": 115
+        },
+        "tier": "named",
+        "method": "gazetteer",
+        "resolver": {
+          "name": "reference:ABS ASGS Ed3",
+          "version": "SAL2021/POA2021/LGA2025"
+        },
+        "confidence": 0.9,
+        "uncertainty_m": 1058.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:7844"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.2527695,
+          -36.7738273
+        ]
+      },
+      "properties": {
+        "label": "Golden Square, VIC",
+        "mention": "Golden Square",
+        "source": {
+          "doc": "streetlight-audit.txt",
+          "char_start": 129,
+          "char_end": 142
+        },
+        "tier": "named",
+        "method": "gazetteer",
+        "resolver": {
+          "name": "reference:ABS ASGS Ed3",
+          "version": "SAL2021/POA2021/LGA2025"
+        },
+        "confidence": 0.9,
+        "uncertainty_m": 1644.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:7844"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.5428476,
+          -36.9045757
+        ]
+      },
+      "properties": {
+        "label": "Lake Eppalock",
+        "mention": "Lake Eppalock",
+        "source": {
+          "doc": "streetlight-audit.txt",
+          "char_start": 180,
+          "char_end": 193
+        },
+        "tier": "named",
+        "method": "gazetteer",
+        "resolver": {
+          "name": "reference:OpenStreetMap",
+          "version": "2026-11"
+        },
+        "confidence": 0.9,
+        "uncertainty_m": 3000.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:4326"
+      }
+    }
+  ]
+}

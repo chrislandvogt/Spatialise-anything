@@ -1,0 +1,8 @@
+{
+  "name": "spatialise",
+  "version": "0.1.0",
+  "description": "Turn any input - documents, tables, text, photos - into map-ready GeoJSON features, each with a confidence score, positional uncertainty and a traceable source.",
+  "repository": "https://github.com/chrislandvogt/spatialise-anything",
+  "license": "Apache-2.0",
+  "keywords": ["gis", "geocoding", "geojson", "gazetteer", "geoai", "australia"]
+}

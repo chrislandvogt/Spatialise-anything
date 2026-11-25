@@ -1,0 +1,262 @@
+{
+  "contract_version": "0.1.0",
+  "threshold": 0.7,
+  "tolerance_floor_m": {
+    "explicit": 5,
+    "structured": 50,
+    "named": 250,
+    "relative": 500,
+    "implicit": 1000
+  },
+  "items": [
+    {
+      "id": "t0-coords-mixed",
+      "tier": "explicit",
+      "description": "Every supported coordinate format, mixed with phone numbers, part numbers, money, dates, ratios and measurements that must not be read as coordinates.",
+      "inputs": [
+        "field-report.txt"
+      ],
+      "frame": {
+        "country": "AU",
+        "state": "VIC"
+      },
+      "expected_features": 8,
+      "network_mentions": [],
+      "review": "generated_from_reference",
+      "notes": []
+    },
+    {
+      "id": "t0-datums",
+      "tier": "explicit",
+      "description": "Legacy and mixed datums: AGD66 grid (not converted, flagged), GDA94 (transformed), WGS84, and none.",
+      "inputs": [
+        "legacy-notes.txt"
+      ],
+      "frame": {
+        "country": "AU",
+        "state": "VIC"
+      },
+      "expected_features": 4,
+      "network_mentions": [],
+      "review": "generated_from_reference",
+      "notes": [
+        "AGD66 truth via PROJ: EPSG:20255 -> AGD66 -> GDA94 ('AGD66 to GDA94 (4)', 1 m) -> GDA2020. The unconverted reading is ~200 m away and must carry >= 250 m uncertainty to count as honest."
+      ]
+    },
+    {
+      "id": "t0-photos",
+      "tier": "explicit",
+      "description": "Three photos: GPS with heading and error, GPS only, no GPS.",
+      "inputs": [
+        "IMG_0001.jpg",
+        "IMG_0002.jpg",
+        "IMG_0003.jpg"
+      ],
+      "frame": {
+        "country": "AU",
+        "state": "VIC"
+      },
+      "expected_features": 3,
+      "network_mentions": [],
+      "review": "generated_from_reference",
+      "notes": []
+    },
+    {
+      "id": "t1-assets",
+      "tier": "structured",
+      "description": "Asset register mixing lat/lon rows, MGA2020 grid rows (datum in the header) and a row with no location (asset lookup needs the network).",
+      "inputs": [
+        "assets.csv"
+      ],
+      "frame": {
+        "country": "AU",
+        "state": "VIC"
+      },
+      "expected_features": 5,
+      "network_mentions": [],
+      "review": "generated_from_reference",
+      "notes": [
+        "HY-330 has no location in the table; online it needs the customer asset layer, which the corpus does not have, so it stays unresolved in both modes."
+      ]
+    },
+    {
+      "id": "t1-areas",
+      "tier": "structured",
+      "description": "Counts by postcode and LGA, including an LGA written as 'City of ...' and a postcode with no postal area.",
+      "inputs": [
+        "requests_by_area.csv"
+      ],
+      "frame": {
+        "country": "AU",
+        "state": "VIC"
+      },
+      "expected_features": 5,
+      "network_mentions": [],
+      "review": "generated_from_reference",
+      "notes": [
+        "9726 is a PO box postcode with no ABS postal area: unresolved, not guessed."
+      ]
+    },
+    {
+      "id": "t1-addresses",
+      "tier": "structured",
+      "description": "Street and landmark addresses in prose. Needs a locator.",
+      "inputs": [
+        "works-notice.txt"
+      ],
+      "frame": {
+        "country": "AU",
+        "state": "VIC"
+      },
+      "expected_features": 3,
+      "network_mentions": [
+        "Bendigo Town Hall, 189-193 Hargreaves Street, Bendigo VIC 3550",
+        "Bendigo railway station car park, Railway Place, Bendigo",
+        "Kyneton Town Hall, Hutton Street, Kyneton VIC 3444"
+      ],
+      "review": "needs_hand_check",
+      "notes": [
+        "Reference positions are OpenStreetMap features (ODbL); the bar is the nominated locator's own result, so re-baseline against it when one is chosen."
+      ]
+    },
+    {
+      "id": "t2-melbourne",
+      "tier": "named",
+      "description": "Inner-Melbourne names that each exist in other states; the cluster settles them.",
+      "inputs": [
+        "depot-report.txt"
+      ],
+      "frame": {
+        "country": "AU",
+        "state": "VIC",
+        "region": "inner Melbourne"
+      },
+      "expected_features": 5,
+      "network_mentions": [],
+      "review": "generated_from_reference",
+      "notes": []
+    },
+    {
+      "id": "t2-hawkesbury",
+      "tier": "named",
+      "description": "Windsor and Richmond are neighbours in both Melbourne and the Hawkesbury; only the river settles which.",
+      "inputs": [
+        "flood-note.txt"
+      ],
+      "frame": {
+        "country": "AU",
+        "state": "NSW",
+        "region": "Hawkesbury"
+      },
+      "expected_features": 3,
+      "network_mentions": [
+        "Hawkesbury River"
+      ],
+      "review": "needs_hand_check",
+      "notes": [
+        "The river's reference is a point near Windsor with 5 km tolerance; a line geometry is accepted if it passes within that distance."
+      ]
+    },
+    {
+      "id": "t2-richmond-alone",
+      "tier": "named",
+      "description": "A bare place name with no context: must come back ambiguous.",
+      "inputs": [
+        "memo.txt"
+      ],
+      "frame": {
+        "country": "AU"
+      },
+      "expected_features": 1,
+      "network_mentions": [],
+      "review": "generated_from_reference",
+      "notes": []
+    },
+    {
+      "id": "t2-bendigo",
+      "tier": "named",
+      "description": "Bendigo suburbs, two of which exist elsewhere, plus a lake the offline gazetteer does not hold.",
+      "inputs": [
+        "streetlight-audit.txt"
+      ],
+      "frame": {
+        "country": "AU",
+        "state": "VIC",
+        "region": "Bendigo"
+      },
+      "expected_features": 6,
+      "network_mentions": [
+        "Lake Eppalock"
+      ],
+      "review": "generated_from_reference",
+      "notes": []
+    },
+    {
+      "id": "t2-springfield",
+      "tier": "named",
+      "description": "Springfield exists in five states; Ipswich settles it. Springfield Lakes is its own locality and must not collapse into Springfield.",
+      "inputs": [
+        "roadworks.txt"
+      ],
+      "frame": {
+        "country": "AU",
+        "state": "QLD",
+        "region": "Ipswich"
+      },
+      "expected_features": 3,
+      "network_mentions": [],
+      "review": "generated_from_reference",
+      "notes": []
+    },
+    {
+      "id": "t3-relative",
+      "tier": "relative",
+      "description": "Offsets, a buffer, a sector and a line along a named road.",
+      "inputs": [
+        "incident-log.txt"
+      ],
+      "frame": {
+        "country": "AU",
+        "state": "VIC"
+      },
+      "expected_features": 4,
+      "network_mentions": [
+        "along the Calder between Kyneton and Castlemaine"
+      ],
+      "review": "needs_hand_check",
+      "notes": [
+        "The sector reach (30 km) and the Calder reference line (locality points of Kyneton, Malmsbury, Taradale, Elphinstone) are approximations: geometry type is the primary check, position is checked against the stated uncertainty."
+      ]
+    },
+    {
+      "id": "t4-implicit",
+      "tier": "implicit",
+      "description": "An organisation's facility with no place name: off by default.",
+      "inputs": [
+        "staff-memo.txt"
+      ],
+      "frame": {
+        "country": "AU"
+      },
+      "expected_features": 1,
+      "network_mentions": [],
+      "review": "generated_from_reference",
+      "notes": []
+    },
+    {
+      "id": "none-traps",
+      "tier": "none",
+      "description": "No places at all: people named after places, versions, money, phone numbers, and a number pair that looks like coordinates.",
+      "inputs": [
+        "team-update.txt"
+      ],
+      "frame": {
+        "country": "AU"
+      },
+      "expected_features": 0,
+      "network_mentions": [],
+      "review": "generated_from_reference",
+      "notes": []
+    }
+  ]
+}

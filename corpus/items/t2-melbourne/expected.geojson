@@ -1,0 +1,183 @@
+{
+  "type": "FeatureCollection",
+  "spatialise": {
+    "contract_version": "0.1.0",
+    "generated": "corpus",
+    "inputs": [
+      "depot-report.txt"
+    ],
+    "counts": {
+      "resolved": 5,
+      "ambiguous": 0,
+      "unresolved": 0
+    },
+    "threshold": 0.7,
+    "frame": {
+      "country": "AU",
+      "state": "VIC",
+      "region": "inner Melbourne"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          145.0024414,
+          -37.8202939
+        ]
+      },
+      "properties": {
+        "label": "Richmond, VIC",
+        "mention": "Richmond",
+        "source": {
+          "doc": "depot-report.txt",
+          "char_start": 65,
+          "char_end": 73
+        },
+        "tier": "named",
+        "method": "gazetteer",
+        "resolver": {
+          "name": "reference:ABS ASGS Ed3",
+          "version": "SAL2021/POA2021/LGA2025"
+        },
+        "confidence": 0.9,
+        "uncertainty_m": 1188.0,
+        "status": "resolved",
+        "candidates": [
+          {
+            "label": "Richmond, NSW",
+            "rejected": "the other places named are all inner Melbourne"
+          }
+        ],
+        "source_crs": "EPSG:7844"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.9881417,
+          -37.8020782
+        ]
+      },
+      "properties": {
+        "label": "Collingwood, VIC",
+        "mention": "Collingwood",
+        "source": {
+          "doc": "depot-report.txt",
+          "char_start": 91,
+          "char_end": 102
+        },
+        "tier": "named",
+        "method": "gazetteer",
+        "resolver": {
+          "name": "reference:ABS ASGS Ed3",
+          "version": "SAL2021/POA2021/LGA2025"
+        },
+        "confidence": 0.9,
+        "uncertainty_m": 635.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:7844"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          145.0000117,
+          -37.8037829
+        ]
+      },
+      "properties": {
+        "label": "Abbotsford, VIC",
+        "mention": "Abbotsford",
+        "source": {
+          "doc": "depot-report.txt",
+          "char_start": 107,
+          "char_end": 117
+        },
+        "tier": "named",
+        "method": "gazetteer",
+        "resolver": {
+          "name": "reference:ABS ASGS Ed3",
+          "version": "SAL2021/POA2021/LGA2025"
+        },
+        "confidence": 0.9,
+        "uncertainty_m": 744.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:7844"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.9930487,
+          -37.8290056
+        ]
+      },
+      "properties": {
+        "label": "Cremorne, VIC",
+        "mention": "Cremorne",
+        "source": {
+          "doc": "depot-report.txt",
+          "char_start": 133,
+          "char_end": 141
+        },
+        "tier": "named",
+        "method": "gazetteer",
+        "resolver": {
+          "name": "reference:ABS ASGS Ed3",
+          "version": "SAL2021/POA2021/LGA2025"
+        },
+        "confidence": 0.9,
+        "uncertainty_m": 465.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:7844"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          145.0024414,
+          -37.8202939
+        ]
+      },
+      "properties": {
+        "label": "Richmond, VIC",
+        "mention": "Richmond",
+        "source": {
+          "doc": "depot-report.txt",
+          "char_start": 196,
+          "char_end": 204
+        },
+        "tier": "named",
+        "method": "gazetteer",
+        "resolver": {
+          "name": "reference:ABS ASGS Ed3",
+          "version": "SAL2021/POA2021/LGA2025"
+        },
+        "confidence": 0.9,
+        "uncertainty_m": 1188.0,
+        "status": "resolved",
+        "candidates": [
+          {
+            "label": "Richmond, NSW",
+            "rejected": "the other places named are all inner Melbourne"
+          }
+        ],
+        "source_crs": "EPSG:7844"
+      }
+    }
+  ]
+}

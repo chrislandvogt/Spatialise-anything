@@ -1,0 +1,266 @@
+{
+  "type": "FeatureCollection",
+  "spatialise": {
+    "contract_version": "0.1.0",
+    "generated": "corpus",
+    "inputs": [
+      "field-report.txt"
+    ],
+    "counts": {
+      "resolved": 8,
+      "ambiguous": 0,
+      "unresolved": 0
+    },
+    "threshold": 0.7,
+    "frame": {
+      "country": "AU",
+      "state": "VIC"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.45291,
+          -37.24712
+        ]
+      },
+      "properties": {
+        "label": null,
+        "mention": "-37.24712, 144.45291",
+        "source": {
+          "doc": "field-report.txt",
+          "char_start": 264,
+          "char_end": 284
+        },
+        "tier": "explicit",
+        "method": "coord_parse",
+        "resolver": {
+          "name": "parse_coords"
+        },
+        "confidence": 0.95,
+        "uncertainty_m": 1.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:7844"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.217,
+          -37.064
+        ]
+      },
+      "properties": {
+        "label": null,
+        "mention": "37°03'50.4\"S 144°13'01.2\"E",
+        "source": {
+          "doc": "field-report.txt",
+          "char_start": 349,
+          "char_end": 375
+        },
+        "tier": "explicit",
+        "method": "coord_parse",
+        "resolver": {
+          "name": "parse_coords"
+        },
+        "confidence": 0.95,
+        "uncertainty_m": 3.5,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:4326 (assumed)",
+        "flags": [
+          "datum_assumed"
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.2795,
+          -36.757
+        ]
+      },
+      "properties": {
+        "label": null,
+        "mention": "36° 45.42' S, 144° 16.77' E",
+        "source": {
+          "doc": "field-report.txt",
+          "char_start": 402,
+          "char_end": 429
+        },
+        "tier": "explicit",
+        "method": "coord_parse",
+        "resolver": {
+          "name": "parse_coords"
+        },
+        "confidence": 0.95,
+        "uncertainty_m": 11.3,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:4326 (assumed)",
+        "flags": [
+          "datum_assumed"
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.458941,
+          -36.8546802
+        ]
+      },
+      "properties": {
+        "label": null,
+        "mention": "E 273456 N 5918234",
+        "source": {
+          "doc": "field-report.txt",
+          "char_start": 466,
+          "char_end": 484
+        },
+        "tier": "explicit",
+        "method": "coord_parse",
+        "resolver": {
+          "name": "parse_coords"
+        },
+        "confidence": 0.95,
+        "uncertainty_m": 1.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:7855"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.5430169,
+          -36.9045609
+        ]
+      },
+      "properties": {
+        "label": null,
+        "mention": "55HBV 8109 1289",
+        "source": {
+          "doc": "field-report.txt",
+          "char_start": 513,
+          "char_end": 528
+        },
+        "tier": "explicit",
+        "method": "coord_parse",
+        "resolver": {
+          "name": "parse_coords"
+        },
+        "confidence": 0.95,
+        "uncertainty_m": 7.1,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:4326 (MGRS)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.2794,
+          -36.757
+        ]
+      },
+      "properties": {
+        "label": null,
+        "mention": "POINT(144.2794 -36.7570)",
+        "source": {
+          "doc": "field-report.txt",
+          "char_start": 568,
+          "char_end": 592
+        },
+        "tier": "explicit",
+        "method": "coord_parse",
+        "resolver": {
+          "name": "parse_coords"
+        },
+        "confidence": 0.95,
+        "uncertainty_m": 7.6,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:4326 (assumed)",
+        "flags": [
+          "datum_assumed"
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.5317,
+          -36.8521
+        ]
+      },
+      "properties": {
+        "label": null,
+        "mention": "lat: -36.8521 lon: 144.5317",
+        "source": {
+          "doc": "field-report.txt",
+          "char_start": 602,
+          "char_end": 629
+        },
+        "tier": "explicit",
+        "method": "coord_parse",
+        "resolver": {
+          "name": "parse_coords"
+        },
+        "confidence": 0.95,
+        "uncertainty_m": 7.6,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:4326 (assumed)",
+        "flags": [
+          "datum_assumed"
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.3019656,
+          -37.0748215
+        ]
+      },
+      "properties": {
+        "label": null,
+        "mention": "E 260150 N 5893420",
+        "source": {
+          "doc": "field-report.txt",
+          "char_start": 679,
+          "char_end": 697
+        },
+        "tier": "explicit",
+        "method": "coord_parse",
+        "resolver": {
+          "name": "parse_coords"
+        },
+        "confidence": 0.95,
+        "uncertainty_m": 1.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:28355"
+      }
+    }
+  ]
+}

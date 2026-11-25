@@ -1,0 +1,148 @@
+{
+  "type": "FeatureCollection",
+  "spatialise": {
+    "contract_version": "0.1.0",
+    "generated": "corpus",
+    "inputs": [
+      "legacy-notes.txt"
+    ],
+    "counts": {
+      "resolved": 4,
+      "ambiguous": 0,
+      "unresolved": 0
+    },
+    "threshold": 0.7,
+    "frame": {
+      "country": "AU",
+      "state": "VIC"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.4584589,
+          -36.8546493
+        ]
+      },
+      "properties": {
+        "label": null,
+        "mention": "E 273300 N 5918050",
+        "source": {
+          "doc": "legacy-notes.txt",
+          "char_start": 94,
+          "char_end": 112
+        },
+        "tier": "explicit",
+        "method": "coord_parse",
+        "resolver": {
+          "name": "reference:PROJ",
+          "version": "pyproj"
+        },
+        "confidence": 0.95,
+        "uncertainty_m": 250.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:20255",
+        "flags": [
+          "datum_unsupported"
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.4572061,
+          -36.8563868
+        ]
+      },
+      "properties": {
+        "label": null,
+        "mention": "-36.85640, 144.45720",
+        "source": {
+          "doc": "legacy-notes.txt",
+          "char_start": 146,
+          "char_end": 166
+        },
+        "tier": "explicit",
+        "method": "coord_parse",
+        "resolver": {
+          "name": "reference:PROJ",
+          "version": "pyproj"
+        },
+        "confidence": 0.95,
+        "uncertainty_m": 1.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:4283"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.217,
+          -37.064
+        ]
+      },
+      "properties": {
+        "label": null,
+        "mention": "-37.06400, 144.21700",
+        "source": {
+          "doc": "legacy-notes.txt",
+          "char_start": 192,
+          "char_end": 212
+        },
+        "tier": "explicit",
+        "method": "coord_parse",
+        "resolver": {
+          "name": "reference:PROJ",
+          "version": "pyproj"
+        },
+        "confidence": 0.95,
+        "uncertainty_m": 1.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:4326"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.279,
+          -36.757
+        ]
+      },
+      "properties": {
+        "label": null,
+        "mention": "-36.75700, 144.27900",
+        "source": {
+          "doc": "legacy-notes.txt",
+          "char_start": 241,
+          "char_end": 261
+        },
+        "tier": "explicit",
+        "method": "coord_parse",
+        "resolver": {
+          "name": "reference:PROJ",
+          "version": "pyproj"
+        },
+        "confidence": 0.95,
+        "uncertainty_m": 3.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:4326 (assumed)",
+        "flags": [
+          "datum_assumed"
+        ]
+      }
+    }
+  ]
+}

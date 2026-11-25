@@ -1,0 +1,20 @@
+{
+  "type": "FeatureCollection",
+  "spatialise": {
+    "contract_version": "0.1.0",
+    "generated": "corpus",
+    "inputs": [
+      "team-update.txt"
+    ],
+    "counts": {
+      "resolved": 0,
+      "ambiguous": 0,
+      "unresolved": 0
+    },
+    "threshold": 0.7,
+    "frame": {
+      "country": "AU"
+    }
+  },
+  "features": []
+}

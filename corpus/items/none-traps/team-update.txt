@@ -1,0 +1,4 @@
+TEAM UPDATE (synthetic test document)
+Welcome to Victoria Nguyen and Sydney Smith, who join the analytics team on Monday.
+Jordan will run the onboarding. Release 4.2.1 ships on 14/08; build 2026.11.25.
+Budget line 1.250, 3.750 approved. Call 1300 555 123.

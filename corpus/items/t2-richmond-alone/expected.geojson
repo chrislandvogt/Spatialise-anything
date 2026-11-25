@@ -1,0 +1,112 @@
+{
+  "type": "FeatureCollection",
+  "spatialise": {
+    "contract_version": "0.1.0",
+    "generated": "corpus",
+    "inputs": [
+      "memo.txt"
+    ],
+    "counts": {
+      "resolved": 0,
+      "ambiguous": 1,
+      "unresolved": 0
+    },
+    "threshold": 0.7,
+    "frame": {
+      "country": "AU"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "label": null,
+        "mention": "Richmond",
+        "source": {
+          "doc": "memo.txt",
+          "char_start": 18,
+          "char_end": 26
+        },
+        "tier": "named",
+        "method": "gazetteer",
+        "resolver": {
+          "name": "reference:ABS ASGS Ed3",
+          "version": "SAL2021/POA2021/LGA2025"
+        },
+        "confidence": 0.17,
+        "uncertainty_m": null,
+        "status": "ambiguous",
+        "candidates": [
+          {
+            "label": "Richmond (Vic.)",
+            "rejected": "no state or nearby place in the text",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                145.0024414,
+                -37.8202939
+              ]
+            }
+          },
+          {
+            "label": "Richmond (NSW)",
+            "rejected": "no state or nearby place in the text",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                150.7574972,
+                -33.6048591
+              ]
+            }
+          },
+          {
+            "label": "Richmond (Mackay - Qld)",
+            "rejected": "no state or nearby place in the text",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                149.1405789,
+                -21.0868668
+              ]
+            }
+          },
+          {
+            "label": "Richmond (Richmond - Qld)",
+            "rejected": "no state or nearby place in the text",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                143.2365882,
+                -20.7622443
+              ]
+            }
+          },
+          {
+            "label": "Richmond (SA)",
+            "rejected": "no state or nearby place in the text",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                138.5621284,
+                -34.938631
+              ]
+            }
+          },
+          {
+            "label": "Richmond (Tas.)",
+            "rejected": "no state or nearby place in the text",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                147.4138019,
+                -42.7387482
+              ]
+            }
+          }
+        ],
+        "source_crs": "EPSG:7844"
+      }
+    }
+  ]
+}

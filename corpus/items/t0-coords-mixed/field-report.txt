@@ -1,0 +1,15 @@
+FIELD INSPECTION REPORT - CALDER CATCHMENT (synthetic test document)
+Report ref FR-2026-0412, rev 1.3.2. Inspector contact: 03 5422 1234 / 0412 345 678.
+ABN 12 345 678 901. Purchase order PO-144-37-8136, total $1,234.56 incl. GST.
+
+Site 1 - pump station. Position -37.24712, 144.45291 (GDA2020), recorded 14:30 on 12/03/2026.
+Site 2 - bore. Located 37°03'50.4"S 144°13'01.2"E.
+Site 3 - storage tank at 36° 45.42' S, 144° 16.77' E.
+Site 4 - culvert. MGA2020 zone 55: E 273456 N 5918234.
+Site 5 - gauge board, MGRS 55HBV 8109 1289.
+Site 6 - survey mark supplied as WKT: POINT(144.2794 -36.7570)
+Site 7 - lat: -36.8521 lon: 144.5317
+Site 8 - from the 2015 plan (GDA94), MGA zone 55 E 260150 N 5893420.
+
+Measurements: 12.345, 67.891 mm. Flow ratio 1.25, 3.50. Pump model 2.250/4.125.
+Next inspection due 2026-09-14. See pages 3.5, 4.1 of the manual.

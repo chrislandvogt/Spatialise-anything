@@ -1,0 +1,51 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.10", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install -r requirements-dev.txt
+      - name: Tests
+        run: python -m pytest
+      - name: Corpus expected outputs validate (phase 1 exit)
+        run: |
+          for f in corpus/items/*/expected.geojson; do
+            python skills/spatialise-anything/scripts/validate_features.py "$f"
+          done
+      - name: Scripts-only tier 0 baseline
+        run: |
+          python eval/run_scripted.py --out runs/scripted
+          python eval/score.py --outputs runs/scripted --offline \
+            --only t0-coords-mixed t0-datums t0-photos t1-assets none-traps
+      - name: Skill scripts run on the standard library alone
+        run: |
+          python -m venv /tmp/bare && /tmp/bare/bin/python -I - <<'PY'
+          import subprocess, sys
+          s = "skills/spatialise-anything/scripts"
+          for cmd in [
+              [f"{s}/parse_coords.py", "--text", "GPS -37.2471, 144.4529", "--frame", "AU"],
+              [f"{s}/gazetteer.py", "search", "Golden Square"],
+              [f"{s}/build_geometry.py", "offset", "--from", "144.2,-37.0", "--bearing", "SE", "--distance", "5 km"],
+              [f"{s}/read_exif.py", "corpus/items/t0-photos/IMG_0001.jpg"],
+              [f"{s}/sniff_table.py", "corpus/items/t1-assets/assets.csv"],
+          ]:
+              subprocess.run([sys.executable, "-I", *cmd], check=True, stdout=subprocess.DEVNULL)
+          print("stdlib-only OK")
+          PY
+      - name: Package
+        run: python tools/package.py

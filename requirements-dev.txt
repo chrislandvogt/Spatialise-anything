@@ -1,0 +1,9 @@
+# The skill itself needs only the Python 3 standard library.
+# These are for tests, the corpus generator and the gazetteer builder.
+pytest>=8
+pyproj>=3.6
+mgrs>=1.4
+pyshp>=2.3
+shapely>=2.0
+Pillow>=10
+openpyxl>=3.1
