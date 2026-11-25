@@ -1,0 +1,167 @@
+{
+  "type": "FeatureCollection",
+  "spatialise": {
+    "contract_version": "0.1.0",
+    "generated": "corpus",
+    "inputs": [
+      "assets.csv"
+    ],
+    "counts": {
+      "resolved": 4,
+      "ambiguous": 0,
+      "unresolved": 1
+    },
+    "threshold": 0.7,
+    "frame": {
+      "country": "AU",
+      "state": "VIC"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.45291,
+          -37.24712
+        ]
+      },
+      "properties": {
+        "label": "Kyneton pump station",
+        "mention": "-37.24712, 144.45291",
+        "source": {
+          "doc": "assets.csv",
+          "row": 2
+        },
+        "tier": "explicit",
+        "method": "coord_parse",
+        "resolver": {
+          "name": "parse_coords"
+        },
+        "confidence": 0.95,
+        "uncertainty_m": 3.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:4326 (assumed)",
+        "flags": [
+          "datum_assumed"
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.3822,
+          -37.1886
+        ]
+      },
+      "properties": {
+        "label": "Malmsbury pump station",
+        "mention": "-37.18860, 144.38220",
+        "source": {
+          "doc": "assets.csv",
+          "row": 3
+        },
+        "tier": "explicit",
+        "method": "coord_parse",
+        "resolver": {
+          "name": "parse_coords"
+        },
+        "confidence": 0.95,
+        "uncertainty_m": 3.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:4326 (assumed)",
+        "flags": [
+          "datum_assumed"
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.3559954,
+          -37.1389987
+        ]
+      },
+      "properties": {
+        "label": "Taradale tank",
+        "mention": "zone 55 E 265153 N 5886435",
+        "source": {
+          "doc": "assets.csv",
+          "row": 4
+        },
+        "tier": "explicit",
+        "method": "coord_parse",
+        "resolver": {
+          "name": "reference:PROJ",
+          "version": "pyproj"
+        },
+        "confidence": 0.95,
+        "uncertainty_m": 1.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:7855"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.3369988,
+          -37.1010039
+        ]
+      },
+      "properties": {
+        "label": "Elphinstone valve",
+        "mention": "zone 55 E 263347 N 5890604",
+        "source": {
+          "doc": "assets.csv",
+          "row": 5
+        },
+        "tier": "explicit",
+        "method": "coord_parse",
+        "resolver": {
+          "name": "reference:PROJ",
+          "version": "pyproj"
+        },
+        "confidence": 0.95,
+        "uncertainty_m": 1.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:7855"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "label": "Hydrant (location TBC)",
+        "mention": "HY-330",
+        "source": {
+          "doc": "assets.csv",
+          "row": 6
+        },
+        "tier": "structured",
+        "method": "not_attempted",
+        "resolver": {
+          "name": "none"
+        },
+        "confidence": 0.0,
+        "uncertainty_m": null,
+        "status": "unresolved",
+        "candidates": [],
+        "source_crs": "n/a",
+        "flags": [
+          "needs_network"
+        ]
+      }
+    }
+  ]
+}

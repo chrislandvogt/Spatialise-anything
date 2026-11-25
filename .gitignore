@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+dist/
+runs/
+*.egg-info/
+.venv/
+.DS_Store
+# raw ABS downloads are large; the built gazetteer is committed instead
+abs/
+*.zip

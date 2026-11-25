@@ -1,0 +1,112 @@
+{
+  "type": "FeatureCollection",
+  "spatialise": {
+    "contract_version": "0.1.0",
+    "generated": "corpus",
+    "inputs": [
+      "works-notice.txt"
+    ],
+    "counts": {
+      "resolved": 3,
+      "ambiguous": 0,
+      "unresolved": 0
+    },
+    "threshold": 0.7,
+    "frame": {
+      "country": "AU",
+      "state": "VIC"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.2825028,
+          -36.7588188
+        ]
+      },
+      "properties": {
+        "label": "Bendigo Town Hall",
+        "mention": "Bendigo Town Hall, 189-193 Hargreaves Street, Bendigo VIC 3550",
+        "source": {
+          "doc": "works-notice.txt",
+          "char_start": 83,
+          "char_end": 145
+        },
+        "tier": "structured",
+        "method": "locator",
+        "resolver": {
+          "name": "reference:OpenStreetMap",
+          "version": "2026-11"
+        },
+        "confidence": 0.9,
+        "uncertainty_m": 150.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:4326"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.2829551,
+          -36.7655937
+        ]
+      },
+      "properties": {
+        "label": "Bendigo railway station car park",
+        "mention": "Bendigo railway station car park, Railway Place, Bendigo",
+        "source": {
+          "doc": "works-notice.txt",
+          "char_start": 182,
+          "char_end": 238
+        },
+        "tier": "structured",
+        "method": "locator",
+        "resolver": {
+          "name": "reference:OpenStreetMap",
+          "version": "2026-11"
+        },
+        "confidence": 0.9,
+        "uncertainty_m": 150.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:4326"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.4532558,
+          -37.2470751
+        ]
+      },
+      "properties": {
+        "label": "Kyneton Town Hall",
+        "mention": "Kyneton Town Hall, Hutton Street, Kyneton VIC 3444",
+        "source": {
+          "doc": "works-notice.txt",
+          "char_start": 269,
+          "char_end": 319
+        },
+        "tier": "structured",
+        "method": "locator",
+        "resolver": {
+          "name": "reference:OpenStreetMap",
+          "version": "2026-11"
+        },
+        "confidence": 0.9,
+        "uncertainty_m": 150.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:4326"
+      }
+    }
+  ]
+}

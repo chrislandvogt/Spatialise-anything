@@ -1,0 +1,6 @@
+asset_id,name,lat,lon,easting_mga2020,northing_mga2020,zone,condition
+PS-001,Kyneton pump station,-37.24712,144.45291,,,,good
+PS-002,Malmsbury pump station,-37.18860,144.38220,,,,fair
+TK-014,Taradale tank,,,265153,5886435,55,good
+VL-207,Elphinstone valve,,,263347,5890604,55,poor
+HY-330,Hydrant (location TBC),,,,,,unknown

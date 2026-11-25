@@ -1,0 +1,47 @@
+{
+  "type": "FeatureCollection",
+  "spatialise": {
+    "contract_version": "0.1.0",
+    "generated": "corpus",
+    "inputs": [
+      "staff-memo.txt"
+    ],
+    "counts": {
+      "resolved": 0,
+      "ambiguous": 0,
+      "unresolved": 1
+    },
+    "threshold": 0.7,
+    "frame": {
+      "country": "AU"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "label": null,
+        "mention": "the regional water corporation's main treatment plant",
+        "source": {
+          "doc": "staff-memo.txt",
+          "char_start": 0,
+          "char_end": 53
+        },
+        "tier": "implicit",
+        "method": "not_attempted",
+        "resolver": {
+          "name": "none"
+        },
+        "confidence": 0.0,
+        "uncertainty_m": null,
+        "status": "unresolved",
+        "candidates": [],
+        "source_crs": "n/a",
+        "flags": [
+          "tier4_disabled"
+        ]
+      }
+    }
+  ]
+}

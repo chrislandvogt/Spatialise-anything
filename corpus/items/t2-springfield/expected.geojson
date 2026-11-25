@@ -1,0 +1,118 @@
+{
+  "type": "FeatureCollection",
+  "spatialise": {
+    "contract_version": "0.1.0",
+    "generated": "corpus",
+    "inputs": [
+      "roadworks.txt"
+    ],
+    "counts": {
+      "resolved": 3,
+      "ambiguous": 0,
+      "unresolved": 0
+    },
+    "threshold": 0.7,
+    "frame": {
+      "country": "AU",
+      "state": "QLD",
+      "region": "Ipswich"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          152.9101556,
+          -27.6525348
+        ]
+      },
+      "properties": {
+        "label": "Springfield, QLD",
+        "mention": "Springfield",
+        "source": {
+          "doc": "roadworks.txt",
+          "char_start": 20,
+          "char_end": 31
+        },
+        "tier": "named",
+        "method": "gazetteer",
+        "resolver": {
+          "name": "reference:ABS ASGS Ed3",
+          "version": "SAL2021/POA2021/LGA2025"
+        },
+        "confidence": 0.85,
+        "uncertainty_m": 1458.0,
+        "status": "resolved",
+        "candidates": [
+          {
+            "label": "Springfield, NSW",
+            "rejected": "Ipswich places this in south-east Queensland"
+          }
+        ],
+        "source_crs": "EPSG:7844"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          152.9179309,
+          -27.6853911
+        ]
+      },
+      "properties": {
+        "label": "Springfield Lakes, QLD",
+        "mention": "Springfield Lakes",
+        "source": {
+          "doc": "roadworks.txt",
+          "char_start": 36,
+          "char_end": 53
+        },
+        "tier": "named",
+        "method": "gazetteer",
+        "resolver": {
+          "name": "reference:ABS ASGS Ed3",
+          "version": "SAL2021/POA2021/LGA2025"
+        },
+        "confidence": 0.9,
+        "uncertainty_m": 1682.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:7844"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          152.7604256,
+          -27.622887
+        ]
+      },
+      "properties": {
+        "label": "Ipswich, QLD",
+        "mention": "Ipswich",
+        "source": {
+          "doc": "roadworks.txt",
+          "char_start": 90,
+          "char_end": 97
+        },
+        "tier": "named",
+        "method": "gazetteer",
+        "resolver": {
+          "name": "reference:ABS ASGS Ed3",
+          "version": "SAL2021/POA2021/LGA2025"
+        },
+        "confidence": 0.9,
+        "uncertainty_m": 1153.0,
+        "status": "resolved",
+        "candidates": [],
+        "source_crs": "EPSG:7844"
+      }
+    }
+  ]
+}
